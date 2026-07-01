@@ -19,6 +19,14 @@ export default function OnboardingModal() {
     return 'Windows';
   });
 
+  const [isMobileDevice, setIsMobileDevice] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const ua = window.navigator.userAgent.toLowerCase();
+      return /android|iphone|ipad|ipod|windows phone/i.test(ua);
+    }
+    return false;
+  });
+
   async function checkOnboardingStatus() {
     try {
       if (typeof window === 'undefined') return;
@@ -68,14 +76,16 @@ export default function OnboardingModal() {
     // 1. Mark terms as accepted
     localStorage.setItem('devops_concierge_terms_accepted', 'true');
     
-    // 2. Trigger OS-specific Ollama Installer Download programmatically
-    const downloadUrl = getDownloadUrl();
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', '');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 2. Trigger OS-specific Ollama Installer Download if not on mobile
+    if (!isMobileDevice) {
+      const downloadUrl = getDownloadUrl();
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', '');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
     // 3. Go to Step 2 (Gemini Key configuration)
     setStep(2);
@@ -203,12 +213,16 @@ export default function OnboardingModal() {
 
               <h4 style={{ color: '#fff', margin: '0 0 4px 0', fontSize: '11px' }}>2. Automatic Local Companion Engine</h4>
               <p style={{ margin: '0 0 10px 0' }}>
-                Accepting these terms initiates a direct download of the official **Ollama Local Engine** installer ({detectedOS} package). Ollama runs locally on your PC, allowing you to execute tasks completely free, private, and with no rate limits.
+                {isMobileDevice ? (
+                  "Ollama runs offline on your PC/Mac. Because mobile devices cannot run large AI models natively, the local engine is disabled on mobile. You will proceed to configure a free cloud key instead."
+                ) : (
+                  `Accepting these terms initiates a direct download of the official **Ollama Local Engine** installer (${detectedOS} package). Ollama runs locally on your PC, allowing you to execute tasks completely free, private, and with no rate limits.`
+                )}
               </p>
 
               <h4 style={{ color: '#fff', margin: '0 0 4px 0', fontSize: '11px' }}>3. Hybrid Cloud Failover Queue</h4>
               <p style={{ margin: '0 0 4px 0' }}>
-                Optional cloud API keys supplied by the user are saved securely. If cloud services hit rate limits or quota caps, the system will automatically failover to your local Ollama engine.
+                Optional cloud API keys supplied by the user are saved securely. If cloud services hit rate limits or quota caps, the desktop version automatically fails over to the offline Ollama engine.
               </p>
             </div>
 
@@ -228,7 +242,7 @@ export default function OnboardingModal() {
                 flexShrink: 0
               }}
             >
-              ✓ Accept & Download Local Companion ({detectedOS})
+              {isMobileDevice ? '✓ Continue to Cloud Key Setup' : `✓ Accept & Download Local Companion (${detectedOS})`}
             </button>
           </div>
         )}

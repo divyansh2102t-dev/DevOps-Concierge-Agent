@@ -10,6 +10,14 @@ export default function SettingsPanel() {
   const [queueKeys, setQueueKeys] = useState([]);
   const [highlightedField, setHighlightedField] = useState(null);
 
+  const [isMobileDevice, setIsMobileDevice] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const ua = window.navigator.userAgent.toLowerCase();
+      return /android|iphone|ipad|ipod|windows phone/i.test(ua);
+    }
+    return false;
+  });
+
   useEffect(() => {
     const handleHighlight = (e) => {
       const field = e.detail?.field;
@@ -451,7 +459,14 @@ export default function SettingsPanel() {
         {/* ── OLLAMA LOCAL INTEGRATION ── */}
         <div className="settings-section" style={{ marginTop: '20px', borderTop: '1px solid var(--border-glass)', paddingTop: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <h4 style={{ margin: 0 }}>💻 Ollama Local Engine</h4>
+            <h4 style={{ margin: 0 }}>
+              💻 Ollama Local Engine{' '}
+              {isMobileDevice && (
+                <span style={{ fontSize: '10px', color: 'var(--accent-amber)', fontWeight: 'bold', marginLeft: '6px' }}>
+                  (PCs/Desktops Only)
+                </span>
+              )}
+            </h4>
             <span style={{
               fontSize: 11,
               fontWeight: '600',
@@ -465,7 +480,11 @@ export default function SettingsPanel() {
           </div>
 
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5 }}>
-            Run LLMs locally on your own machine. 100% free, private, and offline. If your primary cloud key runs out of quota, the agent will automatically failover to your active local Ollama model!
+            {isMobileDevice ? (
+              "⚠️ Ollama cannot run natively on mobile devices. To connect this phone to local models, you must run Ollama on your PC and configure your PC's IP address or an ngrok/Cloudflare tunnel as your backend URL."
+            ) : (
+              "Run LLMs locally on your own machine. 100% free, private, and offline. If your primary cloud key runs out of quota, the agent will automatically failover to your active local Ollama model!"
+            )}
           </p>
 
           {!ollamaConnected ? (

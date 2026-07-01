@@ -29,7 +29,17 @@ export default function InputBar() {
   const [githubUrl, setGithubUrl] = useState('');
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [inputGithubUrl, setInputGithubUrl] = useState('');
+  const [showFolderModal, setShowFolderModal] = useState(false);
+  const [inputFolderPath, setInputFolderPath] = useState('');
   const [automationState, setAutomationState] = useState({ loading: false, error: '', success: '', type: '' });
+
+  const [isMobileDevice, setIsMobileDevice] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const ua = window.navigator.userAgent.toLowerCase();
+      return /android|iphone|ipad|ipod|windows phone/i.test(ua);
+    }
+    return false;
+  });
 
   useEffect(() => {
     // Load persisted settings
@@ -52,7 +62,22 @@ export default function InputBar() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSaveFolderPath = (e) => {
+    e.preventDefault();
+    setProjectPath(inputFolderPath);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('devops_current_project_path', inputFolderPath);
+    }
+    setShowFolderModal(false);
+    setAutomationState({ loading: false, error: '', success: `Manually set folder to: ${inputFolderPath}`, type: 'folder' });
+  };
+
   const handleSelectFolder = async () => {
+    if (isMobileDevice) {
+      setInputFolderPath(projectPath);
+      setShowFolderModal(true);
+      return;
+    }
     setAutomationState({ loading: true, error: '', success: '', type: 'folder' });
     try {
       const res = await selectFolder();
@@ -62,9 +87,13 @@ export default function InputBar() {
         setAutomationState({ loading: false, error: '', success: `Selected folder: ${res.path}`, type: 'folder' });
       } else {
         setAutomationState({ loading: false, error: res?.error || 'Folder selection cancelled.', success: '', type: 'folder' });
+        setInputFolderPath(projectPath);
+        setShowFolderModal(true);
       }
     } catch (err) {
       setAutomationState({ loading: false, error: err.message || 'Failed to select folder', success: '', type: 'folder' });
+      setInputFolderPath(projectPath);
+      setShowFolderModal(true);
     }
   };
 
@@ -1100,6 +1129,72 @@ export default function InputBar() {
                   }}
                 >
                   Save URL
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 📁 Manual Folder Path Modal */}
+      {showFolderModal && (
+        <div className="modal-overlay" style={{ zIndex: 3000 }}>
+          <div className="auth-modal" style={{ maxWidth: '440px', width: '90%', padding: '24px' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '800', color: '#fff' }}>
+              Enter Folder Path Manually
+            </h3>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Provide the absolute file system path of your project folder.
+            </p>
+            <form onSubmit={handleSaveFolderPath} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <input
+                type="text"
+                placeholder="e.g. C:\Users\HP\DevOps-Project"
+                value={inputFolderPath}
+                onChange={e => setInputFolderPath(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-glass)',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  color: '#fff',
+                  fontSize: '13px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFolderModal(false)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-glass)',
+                    background: 'transparent',
+                    color: 'var(--text-secondary)',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'var(--gradient-accent)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Save Path
                 </button>
               </div>
             </form>
