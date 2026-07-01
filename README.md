@@ -3,7 +3,7 @@
 An enterprise-grade, highly resilient AI DevOps automation platform. Scaffold projects, provision cloud infrastructure, deploy to Vercel, orchestrate Kafka pipelines, and generate consulting-grade documentation through natural conversation.
 
 <p align="center">
-  <img src="docs/screenshots/welcome_screen.png" alt="DevOps Concierge Welcome Screen" width="90%" style="border-radius: 12px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);" />
+  <img src="docs/screenshots/welcome_screen_v2.png" alt="DevOps Concierge Welcome Screen" width="90%" style="border-radius: 12px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);" />
 </p>
 
 ---
@@ -76,7 +76,7 @@ graph TD
 The main interface features a responsive sidebar containing conversation history, a central playground showcasing scaffolded cards, and an interactive input area.
 
 <p align="center">
-  <img src="docs/screenshots/welcome_screen.png" alt="DevOps Concierge Chat Workspace" width="90%" style="border-radius: 12px; border: 1px solid #1f2937;" />
+  <img src="docs/screenshots/welcome_screen_v2.png" alt="DevOps Concierge Chat Workspace" width="90%" style="border-radius: 12px; border: 1px solid #1f2937;" />
 </p>
 
 ### Encrypted Settings Panel
