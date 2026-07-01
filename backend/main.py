@@ -91,13 +91,21 @@ app = FastAPI(title="DevOps Concierge Agent", version="1.0.0", lifespan=lifespan
 # Register security and rate limit middleware at lowest ASGI level
 app.add_middleware(SecurityAndRateLimitMiddleware)
 
+import os
+allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+env_origins = os.getenv("ALLOWED_ORIGINS")
+if env_origins:
+    allowed_origins.extend([o.strip() for o in env_origins.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=allowed_origins,
+    allow_origin_regex="https://.*\\.vercel\\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
