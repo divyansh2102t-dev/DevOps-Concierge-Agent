@@ -294,11 +294,26 @@ export default function InputBar() {
       userMemory = localStorage.getItem('devops_concierge_user_profile') || '';
     }
 
+    // Check if it is a basic query to reply instantly
+    const cleanMsg = message.toLowerCase().trim().replace(/[?.!,]/g, '');
+    const greetings = ['hi', 'hello', 'hy', 'hey', 'yo', 'hola', 'greetings', 'morning', 'afternoon', 'evening'];
+    const identity = ['who are you', 'what is this', 'what are you', 'tell me about yourself', 'what do you do', 'your name', 'who created you', 'who build you'];
+    const isGreeting = greetings.includes(cleanMsg);
+    const isIdentity = identity.some(phrase => cleanMsg.includes(phrase));
+    const isBasic = isGreeting || isIdentity;
+
+    let initialContent = '';
+    if (isGreeting) {
+      initialContent = "Hello! I am your DevOps Concierge Agent. How can I help you today? 🚀\n\n*(Note: I am replying instantly from my local memory while the cloud backend server wakes up on Render... this takes about 30–60 seconds on the free tier.)*";
+    } else if (isIdentity) {
+      initialContent = "I am the DevOps Concierge Agent—a specialized AI assistant designed to automate repository setup, Git workflows, and cloud deployments (Vercel & Render) directly from your workspace. 💻\n\n*(Note: I am replying instantly from my local memory while the cloud backend server wakes up on Render... this takes about 30–60 seconds on the free tier.)*";
+    }
+
     // 2. Pre-create the assistant message bubble
     dispatch({
       type: 'ADD_MESSAGE',
       sessionId,
-      payload: { id: msgId, role: 'assistant', content: '' }
+      payload: { id: msgId, role: 'assistant', content: initialContent }
     });
 
     // 3. Mark streaming status as active
@@ -399,6 +414,21 @@ export default function InputBar() {
           break;
 
         case 'error': {
+          if (isBasic) {
+            dispatch({
+              type: 'UPDATE_MESSAGE_BY_ID',
+              sessionId,
+              messageId: msgId,
+              payload: isGreeting 
+                ? "Hello! I am your DevOps Concierge Agent. How can I help you today? 🚀\n\n*(Note: Cloud backend server is offline or waking up on Render. Running in local frontend fallback mode.)*"
+                : "I am the DevOps Concierge Agent—a specialized AI assistant designed to automate repository setup, Git workflows, and cloud deployments (Vercel & Render) directly from your workspace. 💻\n\n*(Note: Cloud backend server is offline or waking up on Render. Running in local frontend fallback mode.)*",
+            });
+            dispatch({ type: 'SET_STREAMING', payload: false });
+            dispatch({ type: 'SET_AGENT_STATE', payload: null });
+            delete activeControllersRef.current[msgId];
+            break;
+          }
+
           const isQuotaExhausted = event.content.toLowerCase().includes('keys') || 
                                    event.content.toLowerCase().includes('quota') || 
                                    event.content.toLowerCase().includes('rate limit') ||
