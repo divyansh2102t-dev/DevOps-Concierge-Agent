@@ -250,9 +250,10 @@ export default function OnboardingModal() {
               <br />
               While it is installing, try this application using your API key. Or wait until the installation completes to run completely offline.
               <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.7)', borderTop: '1px solid rgba(16, 185, 129, 0.2)', paddingTop: '6px' }}>
-                🔒 <strong>Note:</strong> If your browser asks to <em>"Access other apps and services on this device"</em>, please click <strong>"Allow"</strong> so the web app can talk to your local Ollama engine.
+                🔒 <strong>Privacy Note:</strong> If your browser asks to <em>"Access other apps on this device"</em>, you can click <strong>"Allow"</strong> to connect to your local Ollama engine, or click <strong>"Block"</strong> to proceed using cloud API keys. Both methods are safe and fully supported!
               </div>
             </div>
+
 
 
             <form onSubmit={handleSaveKey} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
