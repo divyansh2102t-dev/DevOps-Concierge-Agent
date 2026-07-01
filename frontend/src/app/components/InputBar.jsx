@@ -564,6 +564,14 @@ export default function InputBar() {
     dispatch({ type: 'SET_AGENT_STATE', payload: 'stopped' });
   }, [dispatch]);
 
+  // Automatically handle stop if chat is cleared (messages array becomes empty)
+  useEffect(() => {
+    const currentMsgs = state.messages['single_session'] || [];
+    if (currentMsgs.length === 0 && (state.isStreaming || Object.keys(activeTimeoutsRef.current).length > 0)) {
+      handleStop();
+    }
+  }, [state.messages, state.isStreaming, handleStop]);
+
   // Dependency checking heuristic
   const checkDependency = (messageText) => {
     const sequentialKeywords = [

@@ -176,6 +176,10 @@ async def update_session(session_id: str, update: ConversationUpdate):
 
 @router.delete("/sessions/{session_id}")
 async def delete_session(session_id: str):
+    from backend.agent.orchestrator import set_agent_state
+    from backend.agent.terminal_manager import manager
+    set_agent_state(session_id, "stopped")
+    manager.kill_all_active_sessions()
     await delete_conversation(session_id)
     return {"status": "deleted"}
 
@@ -222,6 +226,8 @@ async def resume_agent(conversation_id: str):
 @router.post("/agent/{conversation_id}/stop")
 async def stop_agent(conversation_id: str):
     from backend.agent.orchestrator import set_agent_state
+    from backend.agent.terminal_manager import manager
     set_agent_state(conversation_id, "stopped")
+    manager.kill_all_active_sessions()
     return {"status": "stopped", "conversation_id": conversation_id}
 

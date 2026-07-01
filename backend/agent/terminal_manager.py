@@ -103,7 +103,17 @@ class TerminalManager:
     def get_active_agents(self) -> List[Dict[str, Any]]:
         return self.active_agents_list
 
+    def kill_all_active_sessions(self) -> bool:
+        """Kills all currently running terminal sessions."""
+        killed_any = False
+        for cmd_id, session in list(self.sessions.items()):
+            if session.status == "running":
+                self.kill_session(cmd_id)
+                killed_any = True
+        return killed_any
+
     def clear_history(self):
+        self.kill_all_active_sessions()
         self.sessions.clear()
 
 # Global manager instance
