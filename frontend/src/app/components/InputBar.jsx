@@ -330,10 +330,10 @@ export default function InputBar() {
         if (!hasReceivedServerResponse) {
           const wakeUpNote = "\n\n*(Note: I am replying instantly from my local memory while the cloud backend server wakes up on Render...)*";
           dispatch({
-            type: 'UPDATE_MESSAGE_BY_ID',
+            type: 'UPDATE_MESSAGE_PROPS',
             sessionId,
             messageId: msgId,
-            payload: cleanContent + wakeUpNote,
+            payload: { content: cleanContent + wakeUpNote },
           });
         }
         delete activeTimeoutsRef.current[msgId];
@@ -347,19 +347,30 @@ export default function InputBar() {
         case 'agent_state':
           dispatch({ type: 'SET_AGENT_STATE', payload: event.state });
           break;
-        case 'text':
+        case 'text': {
+          const isFirstText = !hasReceivedServerResponse;
           hasReceivedServerResponse = true;
           if (activeTimeoutsRef.current[msgId]) {
             clearTimeout(activeTimeoutsRef.current[msgId]);
             delete activeTimeoutsRef.current[msgId];
           }
-          dispatch({
-            type: 'UPDATE_MESSAGE_BY_ID',
-            sessionId,
-            messageId: msgId,
-            payload: event.content,
-          });
+          if (isBasic && isFirstText) {
+            dispatch({
+              type: 'UPDATE_MESSAGE_PROPS',
+              sessionId,
+              messageId: msgId,
+              payload: { content: event.content }
+            });
+          } else {
+            dispatch({
+              type: 'UPDATE_MESSAGE_BY_ID',
+              sessionId,
+              messageId: msgId,
+              payload: event.content,
+            });
+          }
           break;
+        }
 
         case 'tool_start': {
           const cardId = 'tool_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
@@ -445,10 +456,10 @@ export default function InputBar() {
           if (isBasic) {
             const fallbackNote = "\n\n*(Note: Cloud backend server is offline or waking up on Render. Running in local frontend fallback mode.)*";
             dispatch({
-              type: 'UPDATE_MESSAGE_BY_ID',
+              type: 'UPDATE_MESSAGE_PROPS',
               sessionId,
               messageId: msgId,
-              payload: cleanContent + fallbackNote,
+              payload: { content: cleanContent + fallbackNote },
             });
             dispatch({ type: 'SET_STREAMING', payload: false });
             dispatch({ type: 'SET_AGENT_STATE', payload: null });
