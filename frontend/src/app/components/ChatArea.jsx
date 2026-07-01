@@ -176,7 +176,7 @@ export default function ChatArea() {
             }}
           >
             <img 
-              src="/logo.png" 
+              src="/devops_agent_thumbnail.png" 
               alt="DevOps Concierge Logo"
               style={{
                 width: '100%',
