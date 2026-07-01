@@ -1,0 +1,27 @@
+node_modules/
+.next/
+dist/
+__pycache__/
+*.pyc
+venv/
+.env
+.env.local
+*.db
+*.sqlite
+generated_projects/
+docs_output/
+.keys.json
+.keys.key
+*.pptx
+*.docx
+
+# Machine Learning & Caches
+backend/agent/fine_tuned_devops_qwen/
+backend/agent/merged_devops_qwen/
+backend/cache/
+llama_cpp_temp_*
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth

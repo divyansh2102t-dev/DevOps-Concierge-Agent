@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+google-genai
+python-dotenv
+python-pptx
+python-docx
+requests
+cryptography
+httpx
+aiosqlite
+aiofiles
+beautifulsoup4
+playwright
