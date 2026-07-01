@@ -22,6 +22,7 @@ export default function InputBar() {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const activeControllersRef = useRef({}); // Track active streams: { [msgId]: AbortController }
+  const activeTimeoutsRef = useRef({}); // Track active timeouts for basic query wake-up notes
 
   // DevOps Automation States
   const [keys, setKeys] = useState({});
@@ -302,18 +303,18 @@ export default function InputBar() {
     const isIdentity = identity.some(phrase => cleanMsg.includes(phrase));
     const isBasic = isGreeting || isIdentity;
 
-    let initialContent = '';
+    let cleanContent = '';
     if (isGreeting) {
-      initialContent = "Hello! I am your DevOps Concierge Agent. How can I help you today? 🚀\n\n*(Note: I am replying instantly from my local memory while the cloud backend server wakes up on Render... this takes about 30–60 seconds on the free tier.)*";
+      cleanContent = "Hello! I am your DevOps Concierge Agent. How can I help you today? 🚀";
     } else if (isIdentity) {
-      initialContent = "I am the DevOps Concierge Agent—a specialized AI assistant designed to automate repository setup, Git workflows, and cloud deployments (Vercel & Render) directly from your workspace. 💻\n\n*(Note: I am replying instantly from my local memory while the cloud backend server wakes up on Render... this takes about 30–60 seconds on the free tier.)*";
+      cleanContent = "I am the DevOps Concierge Agent developed by **Divyansh Tiwari**—a specialized AI assistant designed to automate repository setup, Git workflows, and cloud deployments (Vercel & Render) directly from your workspace. 💻\n\nCheck out my creator's portfolio: **[Divyansh Tiwari's Portfolio ↗](https://divyansh-tiwari.xyz/)**";
     }
 
     // 2. Pre-create the assistant message bubble
     dispatch({
       type: 'ADD_MESSAGE',
       sessionId,
-      payload: { id: msgId, role: 'assistant', content: initialContent }
+      payload: { id: msgId, role: 'assistant', content: cleanContent }
     });
 
     // 3. Mark streaming status as active
@@ -321,6 +322,24 @@ export default function InputBar() {
     dispatch({ type: 'SET_AGENT_STATE', payload: 'running' });
 
     const toolCardIds = {};
+    let hasReceivedServerResponse = false;
+
+    // Start a timeout to show the wake-up note if the server doesn't respond quickly
+    if (isBasic) {
+      const tid = setTimeout(() => {
+        if (!hasReceivedServerResponse) {
+          const wakeUpNote = "\n\n*(Note: I am replying instantly from my local memory while the cloud backend server wakes up on Render...)*";
+          dispatch({
+            type: 'UPDATE_MESSAGE_BY_ID',
+            sessionId,
+            messageId: msgId,
+            payload: cleanContent + wakeUpNote,
+          });
+        }
+        delete activeTimeoutsRef.current[msgId];
+      }, 5000);
+      activeTimeoutsRef.current[msgId] = tid;
+    }
 
     // 4. Initiate stream
     const controller = streamChat(message, sessionId, 'auto', userMemory, (event) => {
@@ -329,6 +348,11 @@ export default function InputBar() {
           dispatch({ type: 'SET_AGENT_STATE', payload: event.state });
           break;
         case 'text':
+          hasReceivedServerResponse = true;
+          if (activeTimeoutsRef.current[msgId]) {
+            clearTimeout(activeTimeoutsRef.current[msgId]);
+            delete activeTimeoutsRef.current[msgId];
+          }
           dispatch({
             type: 'UPDATE_MESSAGE_BY_ID',
             sessionId,
@@ -414,14 +438,17 @@ export default function InputBar() {
           break;
 
         case 'error': {
+          if (activeTimeoutsRef.current[msgId]) {
+            clearTimeout(activeTimeoutsRef.current[msgId]);
+            delete activeTimeoutsRef.current[msgId];
+          }
           if (isBasic) {
+            const fallbackNote = "\n\n*(Note: Cloud backend server is offline or waking up on Render. Running in local frontend fallback mode.)*";
             dispatch({
               type: 'UPDATE_MESSAGE_BY_ID',
               sessionId,
               messageId: msgId,
-              payload: isGreeting 
-                ? "Hello! I am your DevOps Concierge Agent. How can I help you today? 🚀\n\n*(Note: Cloud backend server is offline or waking up on Render. Running in local frontend fallback mode.)*"
-                : "I am the DevOps Concierge Agent—a specialized AI assistant designed to automate repository setup, Git workflows, and cloud deployments (Vercel & Render) directly from your workspace. 💻\n\n*(Note: Cloud backend server is offline or waking up on Render. Running in local frontend fallback mode.)*",
+              payload: cleanContent + fallbackNote,
             });
             dispatch({ type: 'SET_STREAMING', payload: false });
             dispatch({ type: 'SET_AGENT_STATE', payload: null });
@@ -483,6 +510,10 @@ export default function InputBar() {
         }
 
         case 'done':
+          if (activeTimeoutsRef.current[msgId]) {
+            clearTimeout(activeTimeoutsRef.current[msgId]);
+            delete activeTimeoutsRef.current[msgId];
+          }
           delete activeControllersRef.current[msgId];
           const activeCount = Object.keys(activeControllersRef.current).length;
           
@@ -513,6 +544,10 @@ export default function InputBar() {
         controller.abort();
       }
       delete activeControllersRef.current[msgId];
+    });
+    Object.keys(activeTimeoutsRef.current).forEach(msgId => {
+      clearTimeout(activeTimeoutsRef.current[msgId]);
+      delete activeTimeoutsRef.current[msgId];
     });
     dispatch({ type: 'SET_STREAMING', payload: false });
     dispatch({ type: 'SET_AGENT_STATE', payload: 'stopped' });
