@@ -11,3 +11,4 @@ aiosqlite
 aiofiles
 beautifulsoup4
 playwright
+openpyxl
