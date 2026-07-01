@@ -1,4 +1,11 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+let base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+if (base.endsWith('/')) {
+  base = base.slice(0, -1);
+}
+if (base.endsWith('/api')) {
+  base = base.slice(0, -4);
+}
+export const API_BASE = base;
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
