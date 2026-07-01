@@ -248,8 +248,12 @@ export default function OnboardingModal() {
             }}>
               📥 <strong>Local engine installer is downloading in the background!</strong>
               <br />
-              While it is installing, try this application using your API key. <strong>Try it now!</strong> Or wait until the installation completes to run completely offline.
+              While it is installing, try this application using your API key. Or wait until the installation completes to run completely offline.
+              <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.7)', borderTop: '1px solid rgba(16, 185, 129, 0.2)', paddingTop: '6px' }}>
+                🔒 <strong>Note:</strong> If your browser asks to <em>"Access other apps and services on this device"</em>, please click <strong>"Allow"</strong> so the web app can talk to your local Ollama engine.
+              </div>
             </div>
+
 
             <form onSubmit={handleSaveKey} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
