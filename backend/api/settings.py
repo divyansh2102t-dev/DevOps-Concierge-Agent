@@ -248,7 +248,7 @@ class SelectFolderResponse(BaseModel):
 class DevOpsPushRequest(BaseModel):
     project_dir: str
     repo_name: Optional[str] = None
-    private: Optional[bool] = False
+    private: Optional[bool] = True
 
 
 class DevOpsDeployRequest(BaseModel):

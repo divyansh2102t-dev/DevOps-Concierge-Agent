@@ -4,7 +4,7 @@ import os
 from backend.tools.key_store import get_key
 
 
-async def create_repository(repo_name, description="", private=False):
+async def create_repository(repo_name, description="", private=True):
     token = get_key("GITHUB_TOKEN")
     if not token:
         return {"success": False, "error": "GitHub token not configured. Add it in Settings."}
@@ -20,7 +20,7 @@ async def create_repository(repo_name, description="", private=False):
             json={
                 "name": repo_name,
                 "description": description,
-                "private": private,
+                "private": True,
                 "auto_init": False
             },
             headers=headers
