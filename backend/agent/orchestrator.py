@@ -1253,18 +1253,26 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
             simple_reply = ""
             if not active_candidates and message:
                 cleaned = message.strip().lower().strip("?.!,")
+                
+                warning_suffix = (
+                    "\n\n⚠️ **No Active AI Engine Available!**\n\n"
+                    "To start chatting, please choose one of these options:\n\n"
+                    "* **Option A (Cloud):** Get a free **[Gemini API Key here ↗](https://aistudio.google.com/app/apikey)**, then add it in the **Settings panel** (click the gear icon ⚙️ in the top-right corner of this page).\n"
+                    "* **Option B (Offline):** Download the **[Ollama App here ↗](https://ollama.com/download)** and run it. Once running, open the **Settings panel** (gear icon ⚙️) and click **Install** on the **Qwen 2.5 Coder 1.5B** model to run completely offline and free!"
+                )
+
                 if cleaned in ["hello", "hi", "hey", "hola", "greetings", "yo"]:
                     is_simple = True
-                    simple_reply = "Hello! I am the DevOps Concierge Agent, created by **Divyansh Tiwari**. How can I help you today? Please make sure to configure your Gemini API Key or local Ollama engine in the Settings if you want me to perform complex operations!"
+                    simple_reply = "Hello! I am the DevOps Concierge Agent, created by **Divyansh Tiwari**. How can I help you today?" + warning_suffix
                 elif cleaned in ["who are you", "what is this", "what do you do"]:
                     is_simple = True
-                    simple_reply = "I am the DevOps Concierge Agent — an advanced AI assistant created by **Divyansh Tiwari** to automate your software development lifecycle. You can scaffold projects, configure databases, manage credentials, push to GitHub, and deploy to Vercel/Render. To get started, configure an AI engine in the Settings!"
+                    simple_reply = "I am the DevOps Concierge Agent — an advanced AI assistant created by **Divyansh Tiwari** to automate your software development lifecycle. You can scaffold projects, configure databases, manage credentials, push to GitHub, and deploy to Vercel/Render." + warning_suffix
                 elif cleaned in ["how are you", "how's it going"]:
                     is_simple = True
-                    simple_reply = "I'm doing great, ready to automate some DevOps tasks! What are we building today?"
+                    simple_reply = "I'm doing great, ready to automate some DevOps tasks! What are we building today?" + warning_suffix
                 elif cleaned in ["help", "info"]:
                     is_simple = True
-                    simple_reply = "I can help you scaffold projects, configure databases, connect to GitHub, and deploy to Vercel/Render. To start, configure a Gemini API key or a local Ollama model in the Settings!"
+                    simple_reply = "I can help you scaffold projects, configure databases, connect to GitHub, and deploy to Vercel/Render." + warning_suffix
 
             if is_simple:
                 yield {

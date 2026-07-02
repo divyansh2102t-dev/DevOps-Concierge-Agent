@@ -50,7 +50,12 @@ export default function MessageBubble({ message, isLast, onRetry, isStreaming })
   const [seconds, setSeconds] = useState(0);
   const [hasCollapsed, setHasCollapsed] = useState(false);
   const [showWarningDetails, setShowWarningDetails] = useState(false);
-  const [warningIgnored, setWarningIgnored] = useState(false);
+  const [warningIgnored, setWarningIgnored] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('devops_engine_warning_ignored') === 'true';
+    }
+    return false;
+  });
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -82,79 +87,46 @@ export default function MessageBubble({ message, isLast, onRetry, isStreaming })
     }
   }, [isThinking, seconds]);
 
-  if (warningIgnored) return null;
+  // Synchronize ignored state across all message bubbles in the active session
+  useEffect(() => {
+    const handleEvent = () => {
+      setWarningIgnored(true);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('devops_warning_ignored', handleEvent);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('devops_warning_ignored', handleEvent);
+      }
+    };
+  }, []);
 
-  if (message.content && message.content.includes('No Active AI Engine Available!')) {
-    return (
-      <div className="message assistant" style={{ marginBottom: '16px' }}>
-        <div className="message-content" style={{
-          background: 'rgba(239, 68, 68, 0.08)',
-          border: '1px solid rgba(239, 68, 68, 0.25)',
-          borderRadius: '8px',
-          padding: '14px',
-          color: '#fff'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ⚠️ No Active AI Engine Available!
-            </span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={() => setShowWarningDetails(!showWarningDetails)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-glass)',
-                  borderRadius: '4px',
-                  color: 'var(--accent-cyan)',
-                  padding: '4px 8px',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
-              >
-                {showWarningDetails ? '▲ Hide Details' : '▼ Show Options'}
-              </button>
-              <button
-                onClick={() => setWarningIgnored(true)}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.25)',
-                  border: '1px solid rgba(239, 68, 68, 0.4)',
-                  borderRadius: '4px',
-                  color: '#fff',
-                  padding: '4px 8px',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
-              >
-                ✕ Ignore
-              </button>
-            </div>
-          </div>
+  const handleIgnore = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('devops_engine_warning_ignored', 'true');
+      window.dispatchEvent(new Event('devops_warning_ignored'));
+    }
+  };
 
-          {showWarningDetails && (
-            <div style={{ 
-              marginTop: '12px', 
-              paddingTop: '12px', 
-              borderTop: '1px solid rgba(239, 68, 68, 0.2)',
-              fontSize: '12px',
-              color: 'var(--text-secondary)',
-              lineHeight: '1.6'
-            }}>
-              <p style={{ margin: '0 0 8px 0' }}>To start chatting, please choose one of these options:</p>
-              <ul style={{ paddingLeft: '18px', margin: 0 }}>
-                <li style={{ marginBottom: '6px' }}>
-                  <strong>Option A (Cloud):</strong> Get a free <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Gemini API Key here ↗</a>, then add it in the <strong>Settings panel</strong> (click the gear icon ⚙️ in the top-right corner of this page).
-                </li>
-                <li>
-                  <strong>Option B (Offline):</strong> Download the <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Ollama App here ↗</a> and run it. Once running, open the <strong>Settings panel</strong> (gear icon ⚙️) and click <strong>Install</strong> on the <strong>Qwen 2.5 Coder 1.5B</strong> model to run completely offline and free!
-                </li>
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+  let mainContent = isUser ? message.content : response;
+  const warningMarker = '⚠️';
+  const hasWarning = !isUser && mainContent && mainContent.includes(warningMarker) && (mainContent.includes('No Active AI Engine Available!') || mainContent.includes('Vision Engine Required!'));
+  
+  let warningTitle = '⚠️ No Active AI Engine Available!';
+  let isVisionWarning = false;
+
+  if (hasWarning) {
+    const idx = mainContent.indexOf(warningMarker);
+    if (idx !== -1) {
+      mainContent = mainContent.slice(0, idx).trim();
+    } else {
+      mainContent = '';
+    }
+    if (response && response.includes('Vision Engine Required!')) {
+      warningTitle = '⚠️ Vision Engine Required!';
+      isVisionWarning = true;
+    }
   }
   const imageUrls = message.tool_data?.images || [];
 
@@ -345,7 +317,93 @@ export default function MessageBubble({ message, isLast, onRetry, isStreaming })
             )}
           </div>
         )}
-        {renderContent(response)}
+        {mainContent && renderContent(mainContent)}
+        
+        {hasWarning && !warningIgnored && (
+          <div className="message-warning-box" style={{
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            borderRadius: '8px',
+            padding: '14px',
+            color: '#fff',
+            marginTop: mainContent ? '12px' : '0'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {warningTitle}
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => setShowWarningDetails(!showWarningDetails)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--border-glass)',
+                    borderRadius: '4px',
+                    color: 'var(--accent-cyan)',
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  {showWarningDetails ? '▲ Hide Details' : '▼ Show Options'}
+                </button>
+                <button
+                  onClick={handleIgnore}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.25)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    borderRadius: '4px',
+                    color: '#fff',
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  ✕ Ignore
+                </button>
+              </div>
+            </div>
+
+            {showWarningDetails && (
+              <div style={{ 
+                marginTop: '12px', 
+                paddingTop: '12px', 
+                borderTop: '1px solid rgba(239, 68, 68, 0.2)',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                lineHeight: '1.6'
+              }}>
+                {isVisionWarning ? (
+                  <>
+                    <p style={{ margin: '0 0 8px 0' }}>You have uploaded an image, but there is no active Vision Engine available. To analyze images, please choose one of these options:</p>
+                    <ul style={{ paddingLeft: '18px', margin: 0 }}>
+                      <li style={{ marginBottom: '6px' }}>
+                        <strong>Option A (Cloud):</strong> Get a free <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Gemini API Key here ↗</a>, then add it in the <strong>Settings panel</strong> (click the gear icon ⚙️ in the top-right corner of this page).
+                      </li>
+                      <li>
+                        <strong>Option B (Offline):</strong> Open the <strong>Settings panel</strong> (gear icon ⚙️) and click <strong>Install</strong> on either <strong>Llava 7B</strong> or <strong>Llama 3.2 Vision 11B</strong> in the local model section to run offline image analysis completely free!
+                      </li>
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ margin: '0 0 8px 0' }}>To start chatting, please choose one of these options:</p>
+                    <ul style={{ paddingLeft: '18px', margin: 0 }}>
+                      <li style={{ marginBottom: '6px' }}>
+                        <strong>Option A (Cloud):</strong> Get a free <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Gemini API Key here ↗</a>, then add it in the <strong>Settings panel</strong> (click the gear icon ⚙️ in the top-right corner of this page).
+                      </li>
+                      <li>
+                        <strong>Option B (Offline):</strong> Download the <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Ollama App here ↗</a> and run it. Once running, open the <strong>Settings panel</strong> (gear icon ⚙️) and click <strong>Install</strong> on the <strong>Qwen 2.5 Coder 1.5B</strong> model to run completely offline and free!
+                      </li>
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className={`message-actions ${isUser ? 'user-actions' : 'assistant-actions'}`}>
         <button
