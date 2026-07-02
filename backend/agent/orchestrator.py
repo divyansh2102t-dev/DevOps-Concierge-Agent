@@ -104,6 +104,69 @@ async def _execute_tool(tool_name, arguments):
         return {"error": str(e)}
 
 
+def _collapse_messages(messages):
+    """
+    Collapses consecutive messages of the same role and ensures
+    the last message is a 'user' message to satisfy LLM API constraints.
+    """
+    system_msgs = [m for m in messages if m.get("role") == "system"]
+    chat_msgs = [m for m in messages if m.get("role") != "system"]
+    
+    collapsed = []
+    for msg in chat_msgs:
+        role = msg.get("role")
+        content = msg.get("content")
+        
+        # Map any roles other than user to assistant (e.g. system/tool/etc if they slipped through)
+        role = "user" if role == "user" else "assistant"
+        
+        # Skip empty assistant messages if they have no text
+        if role == "assistant" and not content and "images" not in msg:
+            continue
+            
+        if not collapsed:
+            collapsed.append({"role": role, "content": content, **{k: v for k, v in msg.items() if k not in ["role", "content"]}})
+            continue
+            
+        last = collapsed[-1]
+        if last["role"] == role:
+            # Merge content
+            last_content = last.get("content")
+            if isinstance(last_content, list) and isinstance(content, list):
+                last["content"] = last_content + content
+            elif isinstance(last_content, list):
+                if content:
+                    last["content"] = last_content + [{"type": "text", "text": str(content)}]
+            elif isinstance(content, list):
+                if last_content:
+                    last["content"] = [{"type": "text", "text": str(last_content)}] + content
+                else:
+                    last["content"] = content
+            else:
+                text_last = str(last_content or "")
+                text_msg = str(content or "")
+                if text_last and text_msg:
+                    last["content"] = text_last + "\n\n" + text_msg
+                elif text_msg:
+                    last["content"] = text_msg
+            
+            # Merge images
+            if "images" in msg:
+                if "images" not in last:
+                    last["images"] = []
+                for img in msg["images"]:
+                    if img not in last["images"]:
+                        last["images"].append(img)
+        else:
+            collapsed.append({"role": role, "content": content, **{k: v for k, v in msg.items() if k not in ["role", "content"]}})
+            
+    # Ensure the last message is a user message
+    if collapsed and collapsed[-1]["role"] == "assistant":
+        collapsed.append({"role": "user", "content": "Please continue and finalize your response."})
+        
+    return system_msgs + collapsed
+
+
 async def _stream_openai(key, history_msgs, model="gpt-4o-mini", system_prompt=SYSTEM_PROMPT):
     import httpx
     import os
@@ -136,6 +199,8 @@ async def _stream_openai(key, history_msgs, model="gpt-4o-mini", system_prompt=S
         else:
             openai_msgs.append({"role": role, "content": msg["content"]})
             
+    # Collapse consecutive same-role messages
+    openai_msgs = _collapse_messages(openai_msgs)
     openai_msgs.insert(0, {"role": "system", "content": system_prompt})
     
     headers = {
@@ -174,6 +239,9 @@ async def _stream_groq(key, history_msgs, model="llama-3.3-70b-versatile", syste
     for msg in history_msgs:
         role = "user" if msg["role"] == "user" else "assistant"
         groq_msgs.append({"role": role, "content": msg["content"]})
+    
+    # Collapse consecutive same-role messages
+    groq_msgs = _collapse_messages(groq_msgs)
     groq_msgs.insert(0, {"role": "system", "content": system_prompt})
     
     headers = {
@@ -242,6 +310,7 @@ async def _stream_anthropic(key, history_msgs, model="claude-3-5-haiku-latest", 
         else:
             anthropic_msgs.append({"role": role, "content": msg["content"]})
         
+    anthropic_msgs = _collapse_messages(anthropic_msgs)
     headers = {
         "x-api-key": key,
         "anthropic-version": "2023-06-01",
@@ -280,6 +349,9 @@ async def _stream_huggingface(key, history_msgs, model="Qwen/Qwen2.5-72B-Instruc
     for msg in history_msgs:
         role = "user" if msg["role"] == "user" else "assistant"
         hf_msgs.append({"role": role, "content": msg["content"]})
+    
+    # Collapse consecutive same-role messages
+    hf_msgs = _collapse_messages(hf_msgs)
     hf_msgs.insert(0, {"role": "system", "content": system_prompt})
     
     headers = {
@@ -342,8 +414,6 @@ async def _stream_ollama(history_msgs, model="qwen2.5-coder:7b", system_prompt=S
     is_vision_model = any(x in model_lower for x in ["llava", "vision", "vl", "minicpm"])
     
     ollama_msgs = []
-    # Insert system instruction at the very start of the history
-    ollama_msgs.append({"role": "system", "content": system_prompt})
     
     for msg in history_msgs:
         role = "user" if msg["role"] == "user" else "assistant"
@@ -369,6 +439,10 @@ async def _stream_ollama(history_msgs, model="qwen2.5-coder:7b", system_prompt=S
             msg_obj["images"] = images
             
         ollama_msgs.append(msg_obj)
+            
+    # Collapse consecutive same-role messages
+    ollama_msgs = _collapse_messages(ollama_msgs)
+    ollama_msgs.insert(0, {"role": "system", "content": system_prompt})
             
     headers = {
         "Content-Type": "application/json"
@@ -502,6 +576,7 @@ def is_key_exhausted(key_val):
 # ── CUSTOM STREAMING HELPERS FOR MULTI-AGENT STAGES ──
 async def _stream_openai_custom(key, messages, model):
     import httpx
+    messages = _collapse_messages(messages)
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     body = {"model": model, "messages": messages, "stream": True}
     async with httpx.AsyncClient() as client:
@@ -521,6 +596,7 @@ async def _stream_openai_custom(key, messages, model):
 
 async def _stream_huggingface_custom(key, messages, model):
     import httpx
+    messages = _collapse_messages(messages)
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     body = {"model": model, "messages": messages, "stream": True}
     url = "https://router.huggingface.co/v1/chat/completions"
@@ -556,6 +632,7 @@ async def _stream_huggingface_custom(key, messages, model):
 
 async def _stream_groq_custom(key, messages, model):
     import httpx
+    messages = _collapse_messages(messages)
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     body = {"model": model, "messages": messages, "stream": True}
     async with httpx.AsyncClient() as client:
@@ -575,6 +652,7 @@ async def _stream_groq_custom(key, messages, model):
 
 async def _stream_anthropic_custom(key, messages, model, system_prompt):
     import httpx
+    messages = _collapse_messages(messages)
     headers = {"x-api-key": key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}
     body = {"model": model, "system": system_prompt, "messages": messages, "max_tokens": 4000, "stream": True}
     async with httpx.AsyncClient() as client:
@@ -818,6 +896,15 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
     
     # Reset control state to running for the new execution turn
     set_agent_state(conversation_id, "running")
+    
+    # Check for hardcoded responses first to handle greetings and general agent questions locally
+    from backend.agent.hardcoded_responses import get_hardcoded_response
+    hardcoded_res = get_hardcoded_response(message)
+    if hardcoded_res:
+        yield {"type": "text", "content": hardcoded_res}
+        title = message[:30] + "..." if len(message) > 30 else message
+        yield {"type": "done", "conversation_id": conversation_id, "title": title}
+        return
     
     # 1. Fetch conversation history first to detect any images in history
     history = await get_messages(conversation_id)
@@ -1290,19 +1377,29 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
                         "* **Option A (Cloud):** Get a free **[Gemini API Key here ↗](https://aistudio.google.com/app/apikey)**, then add it in the **Settings panel** (click the gear icon ⚙️ in the top-right corner of this page).\n"
                         "* **Option B (Offline):** Open the **Settings panel** (gear icon ⚙️) and click **Install** on either **Llava 7B** or **Llama 3.2 Vision 11B** in the local model section to run offline image analysis completely free!"
                     )
+                    yield {
+                        "type": "text",
+                        "content": content
+                    }
+                    yield {"type": "done", "conversation_id": conversation_id}
+                    return
                 else:
-                    content = (
-                        "⚠️ **No Active AI Engine Available!**\n\n"
-                        "To start chatting, please choose one of these options:\n\n"
-                        "* **Option A (Cloud):** Get a free **[Gemini API Key here ↗](https://aistudio.google.com/app/apikey)**, then add it in the **Settings panel** (click the gear icon ⚙️ in the top-right corner of this page).\n"
-                        "* **Option B (Offline):** Download the **[Ollama App here ↗](https://ollama.com/download)** and run it. Once running, open the **Settings panel** (gear icon ⚙️) and click **Install** on the **Qwen 2.5 Coder 1.5B** model to run completely offline and free!"
-                    )
-                yield {
-                    "type": "text",
-                    "content": content
-                }
-                yield {"type": "done", "conversation_id": conversation_id}
-                return
+                    # Execute free web search fallback
+                    from backend.agent.hardcoded_responses import search_web_fallback
+                    search_res = search_web_fallback(message)
+                    
+                    content = search_res
+                    if "Offline Search Failed" not in search_res:
+                        content += (
+                            "\n\n---\n"
+                            "💡 *Want to run code, scaffold apps, or deploy?* Connect a **Gemini API Key** or run a local **Ollama** model in Settings (⚙️) to enable full DevOps capabilities!"
+                        )
+                    yield {
+                        "type": "text",
+                        "content": content
+                    }
+                    yield {"type": "done", "conversation_id": conversation_id}
+                    return
                 
             async with _key_lock:
                 start_idx = _key_rotation_counter % len(active_candidates)
