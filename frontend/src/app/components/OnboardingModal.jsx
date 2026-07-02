@@ -244,6 +244,39 @@ export default function OnboardingModal() {
             >
               {isMobileDevice ? '✓ Continue to Cloud Key Setup' : `✓ Accept & Download Local Companion (${detectedOS})`}
             </button>
+
+            <button
+              onClick={() => {
+                localStorage.setItem('devops_concierge_terms_accepted', 'true');
+                localStorage.setItem('devops_concierge_onboarding_completed', 'true');
+                setIsOpen(false);
+              }}
+              style={{
+                marginTop: '10px',
+                padding: '10px',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-glass)',
+                fontWeight: '600',
+                fontSize: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                flexShrink: 0
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                e.currentTarget.style.color = 'var(--accent-cyan)';
+                e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.borderColor = 'var(--border-glass)';
+              }}
+            >
+              ⏭️ SKIP IT to use only Automation Tasks
+            </button>
           </div>
         )}
 

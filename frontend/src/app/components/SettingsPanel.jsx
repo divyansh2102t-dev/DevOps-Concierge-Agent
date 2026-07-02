@@ -51,16 +51,30 @@ export default function SettingsPanel() {
   const [pullingModel, setPullingModel] = useState(null);
   const [pullProgress, setPullProgress] = useState(0);
   const [pullStatus, setPullStatus] = useState('');
+  const [ollamaUrl, setOllamaUrl] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('devops_concierge_ollama_url') || 'http://localhost:11434';
+    }
+    return 'http://localhost:11434';
+  });
+
+  const handleOllamaUrlChange = (newUrl) => {
+    setOllamaUrl(newUrl);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('devops_concierge_ollama_url', newUrl);
+    }
+  };
 
   useEffect(() => {
     checkOllama();
     const interval = setInterval(checkOllama, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [ollamaUrl]);
 
   async function checkOllama() {
     try {
-      const res = await fetch('http://localhost:11434/api/tags');
+      const cleanUrl = ollamaUrl.endsWith('/') ? ollamaUrl.slice(0, -1) : ollamaUrl;
+      const res = await fetch(`${cleanUrl}/api/tags`);
       if (res.ok) {
         setOllamaConnected(true);
         const data = await res.json();
@@ -80,7 +94,8 @@ export default function SettingsPanel() {
     setPullStatus('Initiating download...');
 
     try {
-      const response = await fetch('http://localhost:11434/api/pull', {
+      const cleanUrl = ollamaUrl.endsWith('/') ? ollamaUrl.slice(0, -1) : ollamaUrl;
+      const response = await fetch(`${cleanUrl}/api/pull`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: modelName })
@@ -486,6 +501,46 @@ export default function SettingsPanel() {
               "Run LLMs locally on your own machine. 100% free, private, and offline. If your primary cloud key runs out of quota, the agent will automatically failover to your active local Ollama model!"
             )}
           </p>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '6px', fontWeight: '600' }}>
+              OLLAMA CONNECTION URL / SECURE TUNNEL
+            </label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                value={ollamaUrl}
+                onChange={(e) => handleOllamaUrlChange(e.target.value)}
+                placeholder="http://localhost:11434"
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-glass)',
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  outline: 'none'
+                }}
+              />
+              {ollamaUrl !== 'http://localhost:11434' && (
+                <button
+                  onClick={() => handleOllamaUrlChange('http://localhost:11434')}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-glass)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: 'var(--text-secondary)',
+                    fontSize: '11px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
 
           {!ollamaConnected ? (
             <div style={{

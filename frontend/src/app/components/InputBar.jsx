@@ -37,6 +37,14 @@ const renderClickableText = (text) => {
   });
 };
 
+const getOllamaUrl = () => {
+  if (typeof window !== 'undefined') {
+    const url = localStorage.getItem('devops_concierge_ollama_url') || 'http://localhost:11434';
+    return url.endsWith('/') ? url.slice(0, -1) : url;
+  }
+  return 'http://localhost:11434';
+};
+
 export default function InputBar() {
   const { state, dispatch } = useApp();
   const [input, setInput] = useState('');
@@ -572,7 +580,7 @@ export default function InputBar() {
                                    event.content.toLowerCase().includes('exceeded');
           
           if (isQuotaExhausted) {
-            fetch('http://localhost:11434/api/tags')
+            fetch(`${getOllamaUrl()}/api/tags`)
               .then(res => {
                 if (res.ok) {
                   return res.json();
@@ -816,7 +824,8 @@ export default function InputBar() {
   useEffect(() => {
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch('http://localhost:11434/api/tags');
+        const ollamaUrl = getOllamaUrl();
+        const res = await fetch(`${ollamaUrl}/api/tags`);
         if (!res.ok) return;
         
         const data = await res.json();
@@ -825,7 +834,7 @@ export default function InputBar() {
         
         if (!hasModel) {
           console.log('[Ollama Background] qwen2.5-coder:1.5b not found. Silently pulling in background...');
-          fetch('http://localhost:11434/api/pull', {
+          fetch(`${ollamaUrl}/api/pull`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: 'qwen2.5-coder:1.5b', stream: false })
