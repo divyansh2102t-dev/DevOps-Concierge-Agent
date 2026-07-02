@@ -1248,6 +1248,32 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
                 active_candidates = preferred + others
             if not active_candidates:
                 active_candidates = all_candidates
+            # Intercept simple queries if there is no active AI engine
+            is_simple = False
+            simple_reply = ""
+            if not active_candidates and message:
+                cleaned = message.strip().lower().strip("?.!,")
+                if cleaned in ["hello", "hi", "hey", "hola", "greetings", "yo"]:
+                    is_simple = True
+                    simple_reply = "Hello! I am the DevOps Concierge Agent, created by **Divyansh Tiwari**. How can I help you today? Please make sure to configure your Gemini API Key or local Ollama engine in the Settings if you want me to perform complex operations!"
+                elif cleaned in ["who are you", "what is this", "what do you do"]:
+                    is_simple = True
+                    simple_reply = "I am the DevOps Concierge Agent — an advanced AI assistant created by **Divyansh Tiwari** to automate your software development lifecycle. You can scaffold projects, configure databases, manage credentials, push to GitHub, and deploy to Vercel/Render. To get started, configure an AI engine in the Settings!"
+                elif cleaned in ["how are you", "how's it going"]:
+                    is_simple = True
+                    simple_reply = "I'm doing great, ready to automate some DevOps tasks! What are we building today?"
+                elif cleaned in ["help", "info"]:
+                    is_simple = True
+                    simple_reply = "I can help you scaffold projects, configure databases, connect to GitHub, and deploy to Vercel/Render. To start, configure a Gemini API key or a local Ollama model in the Settings!"
+
+            if is_simple:
+                yield {
+                    "type": "text",
+                    "content": simple_reply
+                }
+                yield {"type": "done", "conversation_id": conversation_id}
+                return
+
             if not active_candidates:
                 if task_type == "multimodal":
                     content = (

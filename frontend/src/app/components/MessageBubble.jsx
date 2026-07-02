@@ -49,8 +49,85 @@ export default function MessageBubble({ message, isLast, onRetry, isStreaming })
   const [isExpanded, setIsExpanded] = useState(true);
   const [seconds, setSeconds] = useState(0);
   const [hasCollapsed, setHasCollapsed] = useState(false);
+  const [showWarningDetails, setShowWarningDetails] = useState(false);
+  const [warningIgnored, setWarningIgnored] = useState(false);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  if (warningIgnored) return null;
+
+  if (message.content && message.content.includes('No Active AI Engine Available!')) {
+    return (
+      <div className="message assistant" style={{ marginBottom: '16px' }}>
+        <div className="message-content" style={{
+          background: 'rgba(239, 68, 68, 0.08)',
+          border: '1px solid rgba(239, 68, 68, 0.25)',
+          borderRadius: '8px',
+          padding: '14px',
+          color: '#fff'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              ⚠️ No Active AI Engine Available!
+            </span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setShowWarningDetails(!showWarningDetails)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--border-glass)',
+                  borderRadius: '4px',
+                  color: 'var(--accent-cyan)',
+                  padding: '4px 8px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {showWarningDetails ? '▲ Hide Details' : '▼ Show Options'}
+              </button>
+              <button
+                onClick={() => setWarningIgnored(true)}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.25)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  padding: '4px 8px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                ✕ Ignore
+              </button>
+            </div>
+          </div>
+
+          {showWarningDetails && (
+            <div style={{ 
+              marginTop: '12px', 
+              paddingTop: '12px', 
+              borderTop: '1px solid rgba(239, 68, 68, 0.2)',
+              fontSize: '12px',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.6'
+            }}>
+              <p style={{ margin: '0 0 8px 0' }}>To start chatting, please choose one of these options:</p>
+              <ul style={{ paddingLeft: '18px', margin: 0 }}>
+                <li style={{ marginBottom: '6px' }}>
+                  <strong>Option A (Cloud):</strong> Get a free <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Gemini API Key here ↗</a>, then add it in the <strong>Settings panel</strong> (click the gear icon ⚙️ in the top-right corner of this page).
+                </li>
+                <li>
+                  <strong>Option B (Offline):</strong> Download the <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)' }}>Ollama App here ↗</a> and run it. Once running, open the <strong>Settings panel</strong> (gear icon ⚙️) and click <strong>Install</strong> on the <strong>Qwen 2.5 Coder 1.5B</strong> model to run completely offline and free!
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
   const imageUrls = message.tool_data?.images || [];
 
   // High-precision decimal timer for active thinking
