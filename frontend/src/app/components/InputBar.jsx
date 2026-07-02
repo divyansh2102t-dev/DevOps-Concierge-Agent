@@ -1360,6 +1360,7 @@ export default function InputBar() {
             </form>
           </div>
         </div>
+      )}
       {/* ▲ Vercel Deploy Options Modal */}
       {showVercelOptionsModal && (
         <div className="modal-overlay" style={{ zIndex: 3000 }}>
