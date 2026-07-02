@@ -15,6 +15,28 @@ import {
   devopsDeployRender
 } from '../services/api';
 
+const renderClickableText = (text) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a 
+          key={index} 
+          href={part} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="toolkit-status-link"
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
+
 export default function InputBar() {
   const { state, dispatch } = useApp();
   const [input, setInput] = useState('');
@@ -1155,12 +1177,12 @@ export default function InputBar() {
                 )}
                 {!automationState.loading && automationState.success && (
                   <span className="toolkit-success-text" title={automationState.success}>
-                    ✅ {automationState.success.length > 50 ? automationState.success.substring(0, 50) + '...' : automationState.success}
+                    ✅ {renderClickableText(automationState.success)}
                   </span>
                 )}
                 {!automationState.loading && automationState.error && (
                   <span className="toolkit-error-text" title={automationState.error}>
-                    ⚠️ {automationState.error.length > 50 ? automationState.error.substring(0, 50) + '...' : automationState.error}
+                    ⚠️ {renderClickableText(automationState.error)}
                   </span>
                 )}
               </div>

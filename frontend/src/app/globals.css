@@ -1838,7 +1838,11 @@ body {
 }
 
 .toolkit-status-indicator {
-  font-size: 11px;
+  font-size: 11.5px;
+  max-width: 480px;
+  text-align: right;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
 .toolkit-loading-text {
@@ -1851,11 +1855,28 @@ body {
 .toolkit-success-text {
   color: var(--accent-green);
   font-weight: 500;
+  display: inline-block;
+  text-align: right;
 }
 
 .toolkit-error-text {
   color: var(--accent-red);
   font-weight: 500;
+  display: inline-block;
+  text-align: right;
+}
+
+.toolkit-status-link {
+  text-decoration: underline;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+  margin: 0 2px;
+  word-break: break-all;
+}
+
+.toolkit-status-link:hover {
+  opacity: 0.8;
 }
 
 .devops-toolkit-body {
