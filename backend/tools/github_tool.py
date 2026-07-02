@@ -78,12 +78,12 @@ def push_to_github(project_dir, repo_url):
                 cmd, cwd=project_dir, capture_output=True, text=True, timeout=60
             )
             if result.returncode != 0:
-                err = result.stderr.lower()
+                combined_output = (result.stderr + "\n" + result.stdout).lower()
                 # Ignore harmless warnings/messages
-                if "nothing to commit" in err or "up-to-date" in err or "no changes added" in err:
+                if "nothing to commit" in combined_output or "up-to-date" in combined_output or "no changes added" in combined_output:
                     continue
                 # Mask token in error message if present to prevent leaks
-                err_msg = result.stderr
+                err_msg = result.stderr.strip() or result.stdout.strip()
                 if token in err_msg:
                     err_msg = err_msg.replace(token, "******")
                 return {"success": False, "error": err_msg, "command": " ".join(cmd).replace(token, "******")}
