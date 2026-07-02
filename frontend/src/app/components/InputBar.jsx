@@ -128,6 +128,7 @@ export default function InputBar() {
   };
 
   const handleDeployToVercel = () => {
+    setAutomationState(prev => ({ ...prev, error: '', success: '' }));
     setShowVercelOptionsModal(true);
   };
 
