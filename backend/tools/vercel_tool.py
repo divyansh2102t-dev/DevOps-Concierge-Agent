@@ -72,6 +72,12 @@ async def _create_neon_database(project_name):
 
 
 async def create_project(project_name, github_repo, framework="nextjs", root_directory=None):
+    import re
+    project_name = project_name.lower()
+    project_name = re.sub(r"[^a-z0-9._-]", "-", project_name)
+    project_name = re.sub(r"-+", "-", project_name)
+    project_name = project_name.strip("-._")
+
     headers = _headers()
     if not headers:
         return {"success": False, "error": "Vercel token not configured. Add it in Settings."}
@@ -152,6 +158,12 @@ async def set_env_vars(project_id, env_vars):
 
 
 async def trigger_deployment(project_name, github_repo, ref="main"):
+    import re
+    project_name = project_name.lower()
+    project_name = re.sub(r"[^a-z0-9._-]", "-", project_name)
+    project_name = re.sub(r"-+", "-", project_name)
+    project_name = project_name.strip("-._")
+
     headers = _headers()
     if not headers:
         return {"success": False, "error": "Vercel token not configured"}
