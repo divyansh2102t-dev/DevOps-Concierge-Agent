@@ -820,31 +820,6 @@ export default function InputBar() {
     }
   }, [state.retryMessage, dispatch, sendMessage]);
 
-  // Silent background puller for qwen2.5-coder:1.5b
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      try {
-        const ollamaUrl = getOllamaUrl();
-        const res = await fetch(`${ollamaUrl}/api/tags`);
-        if (!res.ok) return;
-        
-        const data = await res.json();
-        const models = data.models || [];
-        const hasModel = models.some(m => m.name.startsWith('qwen2.5-coder:1.5b') || m.name.startsWith('qwen2.5-coder:latest'));
-        
-        if (!hasModel) {
-          console.log('[Ollama Background] qwen2.5-coder:1.5b not found. Silently pulling in background...');
-          fetch(`${ollamaUrl}/api/pull`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: 'qwen2.5-coder:1.5b', stream: false })
-          }).catch(() => {});
-        }
-      } catch (err) {}
-    }, 5000);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   // Automated Sequential Dequeueing Effect
   useEffect(() => {

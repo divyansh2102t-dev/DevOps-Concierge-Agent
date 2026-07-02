@@ -66,9 +66,14 @@ export default function SettingsPanel() {
   };
 
   useEffect(() => {
-    checkOllama();
-    const interval = setInterval(checkOllama, 5000);
-    return () => clearInterval(interval);
+    const isLocal = ollamaUrl.includes('localhost') || ollamaUrl.includes('127.0.0.1');
+    if (!isLocal) {
+      checkOllama();
+      const interval = setInterval(checkOllama, 8000);
+      return () => clearInterval(interval);
+    } else {
+      setOllamaConnected(false);
+    }
   }, [ollamaUrl]);
 
   async function checkOllama() {
@@ -482,16 +487,42 @@ export default function SettingsPanel() {
                 </span>
               )}
             </h4>
-            <span style={{
-              fontSize: 11,
-              fontWeight: '600',
-              padding: '2px 8px',
-              borderRadius: 12,
-              background: ollamaConnected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              color: ollamaConnected ? 'var(--accent-green)' : 'var(--accent-red)'
-            }}>
-              {ollamaConnected ? '🟢 Connected' : '🔴 Disconnected'}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                onClick={checkOllama}
+                style={{
+                  fontSize: 10,
+                  fontWeight: '600',
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--border-glass)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
+              >
+                🔌 Connect
+              </button>
+              <span style={{
+                fontSize: 11,
+                fontWeight: '600',
+                padding: '2px 8px',
+                borderRadius: 12,
+                background: ollamaConnected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                color: ollamaConnected ? 'var(--accent-green)' : 'var(--accent-red)'
+              }}>
+                {ollamaConnected ? '🟢 Connected' : '🔴 Disconnected'}
+              </span>
+            </div>
           </div>
 
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5 }}>
