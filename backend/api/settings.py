@@ -295,7 +295,21 @@ async def devops_push(req: DevOpsPushRequest):
     # 1. Create Repository on GitHub
     repo_res = await create_repository(repo_name, description="Created by DevOps Concierge Agent", private=req.private)
     if not repo_res.get("success"):
-        return {"success": False, "error": f"Failed to create GitHub repository: {repo_res.get('error')}"}
+        err_msg = str(repo_res.get("error", ""))
+        if "already exists" in err_msg.lower() or repo_res.get("status") == 422:
+            from backend.tools.github_tool import get_user_info
+            user_info = await get_user_info()
+            if user_info:
+                username = user_info["login"]
+                repo_res = {
+                    "success": True,
+                    "repo_url": f"https://github.com/{username}/{repo_name}",
+                    "clone_url": f"https://github.com/{username}/{repo_name}.git"
+                }
+            else:
+                return {"success": False, "error": f"Failed to create GitHub repository (already exists, but couldn't verify owner): {err_msg}"}
+        else:
+            return {"success": False, "error": f"Failed to create GitHub repository: {err_msg}"}
         
     repo_url = repo_res["clone_url"]
     html_url = repo_res["repo_url"]
