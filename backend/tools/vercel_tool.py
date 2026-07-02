@@ -127,6 +127,23 @@ async def create_project(project_name, github_repo, framework="nextjs", root_dir
             "neon_status": neon_status,
             "database_url": db_url[:28] + "..." if db_url else None
         }
+
+    if resp.status_code == 409:
+        # Fetch the existing project details
+        async with httpx.AsyncClient() as client:
+            get_resp = await client.get(
+                f"{VERCEL_API}/v9/projects/{project_name}",
+                headers=headers
+            )
+            if get_resp.status_code == 200:
+                data = get_resp.json()
+                return {
+                    "success": True,
+                    "project_id": data.get("id"),
+                    "name": data.get("name"),
+                    "already_exists": True
+                }
+
     return {"success": False, "error": resp.text, "status": resp.status_code}
 
 
