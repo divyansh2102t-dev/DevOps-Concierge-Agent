@@ -28,3 +28,4 @@ llama_cpp_temp_*
 build/
 *.spec
 *.log
+frontend/public/installers/

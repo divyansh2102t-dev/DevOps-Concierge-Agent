@@ -12,6 +12,13 @@ export default function ChatArea() {
   const sessionId = 'single_session';
   const messages = state.messages[sessionId] || [];
   const [prevLength, setPrevLength] = useState(0);
+  const [isTauri, setIsTauri] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+      setIsTauri(true);
+    }
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -232,6 +239,103 @@ export default function ChatArea() {
             Divyansh Tiwari
           </a>
         </p>
+        
+        {!isTauri && (
+          <div className="desktop-download-box" style={{
+            margin: '24px auto 0 auto',
+            maxWidth: '580px',
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)',
+            border: '1px solid rgba(6, 182, 212, 0.25)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            boxShadow: '0 8px 32px rgba(6, 182, 212, 0.1)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '20px' }}>🖥️</span>
+              <span style={{
+                fontFamily: '"Outfit", sans-serif',
+                fontWeight: '700',
+                fontSize: '15px',
+                color: '#fff',
+                letterSpacing: '-0.3px'
+              }}>
+                Get DevOps Concierge for Windows
+              </span>
+            </div>
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              margin: 0,
+              lineHeight: '1.5',
+              maxWidth: '450px'
+            }}>
+              Download the standalone desktop app to automatically manage backend microservices, bypass CORS limits, and integrate natively with your local file system.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <a 
+                href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64-setup.exe"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: 'none',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(6, 182, 212, 0.6)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(6, 182, 212, 0.4)';
+                }}
+              >
+                📥 Download Standalone (.exe)
+              </a>
+              <a 
+                href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64_en-US.msi"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  textDecoration: 'none',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                  e.currentTarget.style.borderColor = 'var(--border-glass)';
+                }}
+              >
+                📦 MSI Installer (.msi)
+              </a>
+            </div>
+          </div>
+        )}
 
         <div className="welcome-cards" style={{ marginTop: '30px' }}>
           <div className="welcome-card" style={{ cursor: 'default' }}>
