@@ -9,6 +9,13 @@ export default function SettingsPanel() {
   const [keyInputs, setKeyInputs] = useState({});
   const [queueKeys, setQueueKeys] = useState([]);
   const [highlightedField, setHighlightedField] = useState(null);
+  const [isTauri, setIsTauri] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+      setIsTauri(true);
+    }
+  }, []);
 
   const [isMobileDevice, setIsMobileDevice] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -67,14 +74,14 @@ export default function SettingsPanel() {
 
   useEffect(() => {
     const isLocal = ollamaUrl.includes('localhost') || ollamaUrl.includes('127.0.0.1');
-    if (!isLocal) {
+    if (isTauri || !isLocal) {
       checkOllama();
       const interval = setInterval(checkOllama, 8000);
       return () => clearInterval(interval);
     } else {
       setOllamaConnected(false);
     }
-  }, [ollamaUrl]);
+  }, [ollamaUrl, isTauri]);
 
   async function checkOllama() {
     try {
@@ -520,7 +527,7 @@ export default function SettingsPanel() {
                 background: ollamaConnected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                 color: ollamaConnected ? 'var(--accent-green)' : 'var(--accent-red)'
               }}>
-                {ollamaConnected ? '🟢 Connected' : '🔴 Disconnected'}
+                {ollamaConnected ? (isTauri ? '🟢 Connected (Auto-detected)' : '🟢 Connected') : '🔴 Disconnected'}
               </span>
             </div>
           </div>
