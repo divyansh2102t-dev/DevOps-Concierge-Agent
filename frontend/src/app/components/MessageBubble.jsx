@@ -54,6 +54,34 @@ export default function MessageBubble({ message, isLast, onRetry, isStreaming })
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+  // High-precision decimal timer for active thinking
+  useEffect(() => {
+    let interval;
+    if (isThinking) {
+      const startTime = Date.now();
+      interval = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000;
+        setSeconds(elapsed);
+      }, 100);
+    }
+    return () => clearInterval(interval);
+  }, [isThinking]);
+
+  // Auto-collapse when thinking completes
+  useEffect(() => {
+    if (!isThinking && seconds > 0 && !hasCollapsed) {
+      setIsExpanded(false);
+      setHasCollapsed(true);
+    }
+  }, [isThinking, seconds, hasCollapsed]);
+
+  // Collapse historical chats by default
+  useEffect(() => {
+    if (!isThinking && seconds === 0) {
+      setIsExpanded(false);
+    }
+  }, [isThinking, seconds]);
+
   if (warningIgnored) return null;
 
   if (message.content && message.content.includes('No Active AI Engine Available!')) {
@@ -129,34 +157,6 @@ export default function MessageBubble({ message, isLast, onRetry, isStreaming })
     );
   }
   const imageUrls = message.tool_data?.images || [];
-
-  // High-precision decimal timer for active thinking
-  useEffect(() => {
-    let interval;
-    if (isThinking) {
-      const startTime = Date.now();
-      interval = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 1000;
-        setSeconds(elapsed);
-      }, 100);
-    }
-    return () => clearInterval(interval);
-  }, [isThinking]);
-
-  // Auto-collapse when thinking completes
-  useEffect(() => {
-    if (!isThinking && seconds > 0 && !hasCollapsed) {
-      setIsExpanded(false);
-      setHasCollapsed(true);
-    }
-  }, [isThinking, seconds, hasCollapsed]);
-
-  // Collapse historical chats by default
-  useEffect(() => {
-    if (!isThinking && seconds === 0) {
-      setIsExpanded(false);
-    }
-  }, [isThinking, seconds]);
 
   function handleCopy() {
     navigator.clipboard.writeText(message.content || '');
