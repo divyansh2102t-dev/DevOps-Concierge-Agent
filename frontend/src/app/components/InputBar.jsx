@@ -1392,59 +1392,22 @@ export default function InputBar() {
               <span style={{ color: 'var(--accent-glow)' }}>▲</span> Deploy to Vercel
             </h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-              Vercel requires repository authorization for private projects. Choose your preferred deployment method below:
+              Select your deployment method below. Direct upload is recommended for instant, zero-config hosting.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Option 1: Git-Backed */}
+              {/* Option 1: Direct CLI (Main Option) */}
               <div style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--border-glass)',
+                background: 'rgba(6, 182, 212, 0.05)',
+                border: '1px solid rgba(6, 182, 212, 0.25)',
                 borderRadius: '8px',
                 padding: '16px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px'
               }}>
-                <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff' }}>
-                  Option 1: Git-Backed Deployment (CI/CD)
-                </div>
-                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Links your Vercel account directly to the GitHub repository. Future pushes to your repository automatically trigger new builds and updates.
-                  <div style={{ marginTop: '6px', color: '#fbbf24', fontSize: '11.5px' }}>
-                    ⚠️ Requires a one-time Vercel GitHub App authorization for private repos.
-                  </div>
-                </div>
-                <button
-                  onClick={executeVercelGitDeploy}
-                  style={{
-                    alignSelf: 'flex-start',
-                    padding: '8px 14px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    background: 'var(--gradient-accent)',
-                    color: '#fff',
-                    fontSize: '12.5px',
-                    fontWeight: '700',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Deploy via Git Integration
-                </button>
-              </div>
-
-              {/* Option 2: Direct CLI */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--border-glass)',
-                borderRadius: '8px',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px'
-              }}>
-                <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff' }}>
-                  Option 2: Direct Folder Upload (Bypasses Git)
+                <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  ⚡ Option 1: Direct Folder Upload (Bypasses Git)
                 </div>
                 <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                   Uploads the local project directory directly to Vercel via CLI in a single step. Bypasses the need for Vercel GitHub App authorization.
@@ -1456,10 +1419,10 @@ export default function InputBar() {
                   onClick={executeVercelCliDeploy}
                   style={{
                     alignSelf: 'flex-start',
-                    padding: '8px 14px',
+                    padding: '8px 16px',
                     borderRadius: '6px',
-                    border: '1px solid var(--border-glass)',
-                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: 'none',
+                    background: 'var(--gradient-accent)',
                     color: '#fff',
                     fontSize: '12.5px',
                     fontWeight: '700',
@@ -1468,6 +1431,39 @@ export default function InputBar() {
                 >
                   Deploy via Direct CLI Upload
                 </button>
+              </div>
+
+              {/* Option 2: Git-Backed (Link only, no button) */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '8px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff' }}>
+                  Option 2: Git-Backed Deployment (CI/CD)
+                </div>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  To configure automatic deployment on every push, import the repository directly in your Vercel Dashboard.
+                </div>
+                <a
+                  href="https://vercel.com/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    alignSelf: 'flex-start',
+                    color: 'var(--accent-cyan)',
+                    fontSize: '12.5px',
+                    fontWeight: '600',
+                    textDecoration: 'underline',
+                    marginTop: '2px'
+                  }}
+                >
+                  Link GitHub Repository on Vercel Dashboard ↗
+                </a>
               </div>
             </div>
 
