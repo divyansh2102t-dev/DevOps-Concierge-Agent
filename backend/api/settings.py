@@ -409,15 +409,20 @@ async def devops_deploy_vercel_cli(req: DevOpsCLIRequest):
     import os
     from backend.tools.vercel_tool import deploy_via_cli
     
-    project_dir = os.path.normpath(req.project_dir)
-    if not os.path.exists(project_dir) or not os.path.isdir(project_dir):
-        return {"success": False, "error": f"Invalid project directory: {project_dir}"}
-        
-    project_name = req.project_name or os.path.basename(project_dir)
-    if not project_name:
-        project_name = "devops-concierge-project"
-        
-    res = await deploy_via_cli(project_dir, project_name)
-    return res
+    try:
+        project_dir = os.path.normpath(req.project_dir)
+        if not os.path.exists(project_dir) or not os.path.isdir(project_dir):
+            return {"success": False, "error": f"Invalid project directory: {project_dir}"}
+            
+        project_name = req.project_name or os.path.basename(project_dir)
+        if not project_name:
+            project_name = "devops-concierge-project"
+            
+        res = await deploy_via_cli(project_dir, project_name)
+        return res
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e)}
 
 

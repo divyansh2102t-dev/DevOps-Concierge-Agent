@@ -277,20 +277,22 @@ async def deploy_via_cli(project_dir, project_name):
         if scope:
             cmd.extend(["--scope", scope])
         
-        # Run vercel deploy asynchronously
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            cwd=project_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env
-        )
-        stdout, stderr = await process.communicate()
+        # Run vercel deploy in a separate thread to ensure event-loop compatibility on Windows
+        def run_subprocess():
+            return subprocess.run(
+                cmd,
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+                env=env
+            )
+            
+        result = await asyncio.to_thread(run_subprocess)
+        stdout_str = result.stdout.strip()
+        stderr_str = result.stderr.strip()
+        returncode = result.returncode
         
-        stdout_str = stdout.decode().strip()
-        stderr_str = stderr.decode().strip()
-        
-        if process.returncode == 0:
+        if returncode == 0:
             url = None
             for line in stdout_str.splitlines():
                 if "production:" in line.lower() or "https://" in line:
