@@ -174,6 +174,13 @@ export async function devopsDeployVercel(githubUrl, projectName = null) {
   });
 }
 
+export async function devopsDeployVercelCli(projectDir, projectName = null) {
+  return request('/api/settings/devops/deploy/vercel/cli', {
+    method: 'POST',
+    body: JSON.stringify({ project_dir: projectDir, project_name: projectName }),
+  });
+}
+
 export async function devopsDeployRender(githubUrl, projectName = null) {
   return request('/api/settings/devops/deploy/render', {
     method: 'POST',

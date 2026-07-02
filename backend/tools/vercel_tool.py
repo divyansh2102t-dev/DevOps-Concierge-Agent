@@ -212,3 +212,64 @@ async def get_deployment_status(deployment_id):
             "url": f"https://{data.get('url', '')}"
         }
     return {"success": False, "error": resp.text}
+
+
+async def deploy_via_cli(project_dir, project_name):
+    import os
+    import asyncio
+    import re
+    import subprocess
+    
+    token = get_key("VERCEL_TOKEN")
+    if not token:
+        return {"success": False, "error": "Vercel token not configured. Add it in Settings."}
+
+    # Sanitize name
+    project_name = project_name.lower()
+    project_name = re.sub(r"[^a-z0-9._-]", "-", project_name)
+    project_name = re.sub(r"-+", "-", project_name)
+    project_name = project_name.strip("-._")
+
+    try:
+        env = os.environ.copy()
+        env["VERCEL_TOKEN"] = token
+        
+        # Build command: npx -y vercel --token <token> --name <project_name> --yes --prod
+        # npx -y ensures it auto-installs/runs vercel CLI without asking for confirmation
+        cmd = ["npx", "-y", "vercel", "--token", token, "--name", project_name, "--yes", "--prod"]
+        
+        # Run vercel deploy asynchronously
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            cwd=project_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env
+        )
+        stdout, stderr = await process.communicate()
+        
+        stdout_str = stdout.decode().strip()
+        stderr_str = stderr.decode().strip()
+        
+        if process.returncode == 0:
+            url = None
+            for line in stdout_str.splitlines():
+                if "production:" in line.lower() or "https://" in line:
+                    match = re.search(r"https://[a-zA-Z0-9.-]+\.vercel\.app", line)
+                    if match:
+                        url = match.group(0)
+                        break
+            if not url:
+                urls = re.findall(r"https://[a-zA-Z0-9.-]+\.vercel\.app", stdout_str)
+                if urls:
+                    url = urls[0]
+            
+            return {
+                "success": True,
+                "url": url or "Deployment triggered successfully",
+                "stdout": stdout_str
+            }
+        else:
+            return {"success": False, "error": stderr_str or stdout_str}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

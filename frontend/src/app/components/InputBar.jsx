@@ -11,6 +11,7 @@ import {
   selectFolder,
   devopsPush,
   devopsDeployVercel,
+  devopsDeployVercelCli,
   devopsDeployRender
 } from '../services/api';
 
@@ -32,6 +33,8 @@ export default function InputBar() {
   const [inputGithubUrl, setInputGithubUrl] = useState('');
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [inputFolderPath, setInputFolderPath] = useState('');
+  const [showVercelOptionsModal, setShowVercelOptionsModal] = useState(false);
+  const [showRenderOptionsModal, setShowRenderOptionsModal] = useState(false);
   const [automationState, setAutomationState] = useState({ loading: false, error: '', success: '', type: '' });
 
   const [isMobileDevice, setIsMobileDevice] = useState(() => {
@@ -124,9 +127,14 @@ export default function InputBar() {
     }
   };
 
-  const handleDeployToVercel = async () => {
+  const handleDeployToVercel = () => {
+    setShowVercelOptionsModal(true);
+  };
+
+  const executeVercelGitDeploy = async () => {
+    setShowVercelOptionsModal(false);
     if (!githubUrl) {
-      setAutomationState({ loading: false, error: 'First initialize on GitHub!', success: '', type: 'vercel' });
+      setAutomationState({ loading: false, error: 'First initialize on GitHub to use Git-backed deployment!', success: '', type: 'vercel' });
       return;
     }
     setAutomationState({ loading: true, error: '', success: '', type: 'vercel' });
@@ -140,10 +148,57 @@ export default function InputBar() {
           type: 'vercel' 
         });
       } else {
-        setAutomationState({ loading: false, error: res?.error || 'Failed to deploy to Vercel.', success: '', type: 'vercel' });
+        let errMsg = res?.error || 'Failed to deploy to Vercel.';
+        if (typeof errMsg === 'string' && (errMsg.includes('install') || errMsg.includes('integration') || errMsg.includes('GitHub App') || errMsg.includes('bad_request'))) {
+          setAutomationState({
+            loading: false,
+            error: (
+              <span>
+                To link a private GitHub repository, you must authorize Vercel first.<br />
+                <a 
+                  href="https://github.com/apps/vercel" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ color: '#3b82f6', textDecoration: 'underline', fontWeight: 'bold', display: 'inline-block', marginTop: '6px' }}
+                >
+                  👉 Click here to install Vercel GitHub App
+                </a>
+              </span>
+            ),
+            success: '',
+            type: 'vercel'
+          });
+        } else {
+          setAutomationState({ loading: false, error: errMsg, success: '', type: 'vercel' });
+        }
       }
     } catch (err) {
       setAutomationState({ loading: false, error: err.message || 'Failed to deploy to Vercel', success: '', type: 'vercel' });
+    }
+  };
+
+  const executeVercelCliDeploy = async () => {
+    setShowVercelOptionsModal(false);
+    if (!projectPath) {
+      setAutomationState({ loading: false, error: 'Please select a Project Folder first!', success: '', type: 'vercel' });
+      return;
+    }
+    setAutomationState({ loading: true, error: '', success: '', type: 'vercel' });
+    try {
+      const folderName = projectPath.split(/[\\/]/).pop() || 'devops-concierge-project';
+      const res = await devopsDeployVercelCli(projectPath, folderName);
+      if (res && res.success) {
+        setAutomationState({ 
+          loading: false, 
+          error: '', 
+          success: `Successfully deployed to Vercel directly via CLI! Live URL: ${res.url}`, 
+          type: 'vercel' 
+        });
+      } else {
+        setAutomationState({ loading: false, error: res?.error || 'Failed to deploy to Vercel via CLI.', success: '', type: 'vercel' });
+      }
+    } catch (err) {
+      setAutomationState({ loading: false, error: err.message || 'Failed to deploy to Vercel via CLI', success: '', type: 'vercel' });
     }
   };
 
@@ -163,7 +218,29 @@ export default function InputBar() {
           type: 'render' 
         });
       } else {
-        setAutomationState({ loading: false, error: res?.error || 'Failed to deploy to Render.', success: '', type: 'render' });
+        let errMsg = res?.error || 'Failed to deploy to Render.';
+        if (typeof errMsg === 'string' && (errMsg.includes('not found') || errMsg.includes('unauthorized') || errMsg.includes('permission') || errMsg.includes('GitHub') || errMsg.includes('connect'))) {
+          setAutomationState({
+            loading: false,
+            error: (
+              <span>
+                Render requires GitHub App permission to pull your private repository.<br />
+                <a 
+                  href="https://dashboard.render.com/github/connect" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ color: '#3b82f6', textDecoration: 'underline', fontWeight: 'bold', display: 'inline-block', marginTop: '6px' }}
+                >
+                  👉 Click here to connect Render to GitHub
+                </a>
+              </span>
+            ),
+            success: '',
+            type: 'render'
+          });
+        } else {
+          setAutomationState({ loading: false, error: errMsg, success: '', type: 'render' });
+        }
       }
     } catch (err) {
       setAutomationState({ loading: false, error: err.message || 'Failed to deploy to Render', success: '', type: 'render' });
@@ -1281,6 +1358,112 @@ export default function InputBar() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      {/* ▲ Vercel Deploy Options Modal */}
+      {showVercelOptionsModal && (
+        <div className="modal-overlay" style={{ zIndex: 3000 }}>
+          <div className="auth-modal" style={{ maxWidth: '520px', width: '95%', padding: '28px', background: 'rgba(15, 17, 26, 0.95)', border: '1px solid var(--border-glass)', borderRadius: '12px' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: 'var(--accent-glow)' }}>▲</span> Deploy to Vercel
+            </h3>
+            <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              Vercel requires repository authorization for private projects. Choose your preferred deployment method below:
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Option 1: Git-Backed */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '8px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff' }}>
+                  Option 1: Git-Backed Deployment (CI/CD)
+                </div>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Links your Vercel account directly to the GitHub repository. Future pushes to your repository automatically trigger new builds and updates.
+                  <div style={{ marginTop: '6px', color: '#fbbf24', fontSize: '11.5px' }}>
+                    ⚠️ Requires a one-time Vercel GitHub App authorization for private repos.
+                  </div>
+                </div>
+                <button
+                  onClick={executeVercelGitDeploy}
+                  style={{
+                    alignSelf: 'flex-start',
+                    padding: '8px 14px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'var(--gradient-accent)',
+                    color: '#fff',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Deploy via Git Integration
+                </button>
+              </div>
+
+              {/* Option 2: Direct CLI */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '8px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ fontWeight: '700', fontSize: '14px', color: '#fff' }}>
+                  Option 2: Direct Folder Upload (Bypasses Git)
+                </div>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Uploads the local project directory directly to Vercel via CLI in a single step. Bypasses the need for Vercel GitHub App authorization.
+                  <div style={{ marginTop: '6px', color: 'var(--text-secondary)', fontSize: '11.5px' }}>
+                    ℹ️ Manual deploys only. Code changes won't auto-redeploy on git commit.
+                  </div>
+                </div>
+                <button
+                  onClick={executeVercelCliDeploy}
+                  style={{
+                    alignSelf: 'flex-start',
+                    padding: '8px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-glass)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#fff',
+                    fontSize: '12.5px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Deploy via Direct CLI Upload
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button
+                type="button"
+                onClick={() => setShowVercelOptionsModal(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-glass)',
+                  background: 'transparent',
+                  color: 'var(--text-secondary)',
+                  fontSize: '12.5px',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
