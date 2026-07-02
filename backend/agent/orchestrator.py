@@ -21,6 +21,16 @@ def set_agent_state(conversation_id: str, state: str):
     AGENT_STATES[conversation_id] = state
 
 
+def _resolve_model(provider: str, model_name: str) -> str:
+    if not model_name or model_name == "auto":
+        if provider == "gemini": return "gemini-2.5-flash"
+        elif provider == "openai": return "gpt-4o-mini"
+        elif provider == "anthropic": return "claude-3-5-haiku-latest"
+        elif provider == "groq": return "llama-3.3-70b-versatile"
+        elif provider == "huggingface": return "Qwen/Qwen2.5-72B-Instruct"
+    return model_name
+
+
 def _build_gemini_tools():
     tools = []
     for t in TOOL_DEFINITIONS:
@@ -35,6 +45,8 @@ def _build_gemini_tools():
 
 
 async def _generate_title(client, model, message):
+    if not model or model == "auto":
+        model = "gemini-2.5-flash"
     try:
         response = client.models.generate_content(
             model=model,
@@ -597,7 +609,7 @@ async def _execute_stage(stage_name, task_type, system_instruction, user_prompt,
         if route and route.get("success"):
             provider = route["provider"]
             key = route["key"]
-            cand_model = route["model"]
+            cand_model = _resolve_model(provider, route["model"])
             label = route["label"]
         else:
             # Local fallback scheduling
@@ -628,13 +640,7 @@ async def _execute_stage(stage_name, task_type, system_instruction, user_prompt,
             provider = cand["provider"]
             key = cand["key"]
             label = cand["label"]
-            cand_model = cand["model"]
-            if not cand_model:
-                if provider == "gemini": cand_model = "gemini-2.5-flash"
-                elif provider == "openai": cand_model = "gpt-4o-mini"
-                elif provider == "anthropic": cand_model = "claude-3-5-haiku-latest"
-                elif provider == "groq": cand_model = "llama-3.3-70b-versatile"
-                elif provider == "huggingface": cand_model = "Qwen/Qwen2.5-72B-Instruct"
+            cand_model = _resolve_model(provider, cand["model"])
 
         start_time = time.time()
         try:
@@ -906,6 +912,9 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
     else:
         task_type = "text"
 
+    if task_type == "complex_reasoning":
+        yield {"type": "agent_state", "state": "running"}
+
     # 3. Build the dynamic system prompt including user memory personalization
     # Use SIMPLE_SYSTEM_PROMPT for multimodal or simple text tasks, and full SYSTEM_PROMPT for complex DevOps reasoning
     selected_prompt = SIMPLE_SYSTEM_PROMPT if task_type in ["multimodal", "text"] else SYSTEM_PROMPT
@@ -1125,7 +1134,7 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
         if route and route.get("success") and (task_type != "multimodal" or route.get("provider") in ["gemini", "openai", "anthropic"]):
             provider = route["provider"]
             key = route["key"]
-            cand_model = route["model"]
+            cand_model = _resolve_model(provider, route["model"])
             label = route["label"]
         else:
             # Fallback to local scheduler if KeyOptimus is offline or routed incorrectly
@@ -1270,13 +1279,7 @@ async def run_agent(conversation_id, message, model="gemini-2.5-flash", user_mem
             provider = cand["provider"]
             key = cand["key"]
             label = cand["label"]
-            cand_model = cand["model"]
-            if not cand_model:
-                if provider == "gemini": cand_model = "gemini-2.5-flash"
-                elif provider == "openai": cand_model = "gpt-4o-mini"
-                elif provider == "anthropic": cand_model = "claude-3-5-haiku-latest"
-                elif provider == "groq": cand_model = "llama-3.3-70b-versatile"
-                elif provider == "huggingface": cand_model = "Qwen/Qwen2.5-72B-Instruct"
+            cand_model = _resolve_model(provider, cand["model"])
 
         if attempt > 0 and last_attempted_key and key != last_attempted_key:
             yield {

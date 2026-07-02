@@ -319,7 +319,6 @@ export default function InputBar() {
 
     // 3. Mark streaming status as active
     dispatch({ type: 'SET_STREAMING', payload: true });
-    dispatch({ type: 'SET_AGENT_STATE', payload: 'running' });
 
     const toolCardIds = {};
     let hasReceivedServerResponse = false;
@@ -342,7 +341,7 @@ export default function InputBar() {
     }
 
     // 4. Initiate stream
-    const controller = streamChat(message, sessionId, 'auto', userMemory, (event) => {
+    const controller = streamChat(message, sessionId, state.model, userMemory, (event) => {
       switch (event.type) {
         case 'agent_state':
           dispatch({ type: 'SET_AGENT_STATE', payload: event.state });
