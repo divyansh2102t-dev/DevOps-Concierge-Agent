@@ -273,7 +273,7 @@ async def deploy_via_cli(project_dir, project_name):
         
         import platform
         cmd_name = "npx.cmd" if platform.system() == "Windows" else "npx"
-        cmd = [cmd_name, "-y", "vercel", "--token", token, "--name", project_name, "--yes", "--prod"]
+        cmd = [cmd_name, "-y", "vercel", "--token", token, "--name", project_name, "--yes", "--prod", "--no-wait"]
         if scope:
             cmd.extend(["--scope", scope])
         
@@ -300,6 +300,10 @@ async def deploy_via_cli(project_dir, project_name):
                         break
             if not url:
                 urls = re.findall(r"https://[a-zA-Z0-9.-]+\.vercel\.app", stdout_str)
+                if urls:
+                    url = urls[0]
+            if not url:
+                urls = re.findall(r"https://[a-zA-Z0-9.-]+\.vercel\.app", stderr_str)
                 if urls:
                     url = urls[0]
             
