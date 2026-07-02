@@ -542,6 +542,67 @@ export default function SettingsPanel() {
             </div>
           </div>
 
+          {/* Expandable Tunnel Guide */}
+          <div style={{ marginBottom: '16px' }}>
+            <details style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border-glass)',
+              borderRadius: '6px',
+              padding: '8px 12px',
+              fontSize: '11px',
+              cursor: 'pointer'
+            }}>
+              <summary style={{
+                color: 'var(--accent-cyan)',
+                fontWeight: '600',
+                outline: 'none',
+                userSelect: 'none'
+              }}>
+                🔗 How to connect local Ollama to secure HTTPS site?
+              </summary>
+              <div style={{ marginTop: '8px', color: 'var(--text-secondary)', lineHeight: '1.6', cursor: 'default' }}>
+                <p style={{ margin: '0 0 8px 0' }}>
+                  Secure web browsers block direct local HTTP connections from HTTPS websites. You can bypass this by exposing Ollama through a secure HTTPS tunnel:
+                </p>
+                <ol style={{ paddingLeft: '16px', margin: '0 0 8px 0' }}>
+                  <li style={{ marginBottom: '4px' }}>
+                    Install and run <strong>Ollama</strong> on your PC.
+                  </li>
+                  <li style={{ marginBottom: '4px' }}>
+                    Allow CORS requests by launching Ollama with the origin variable set:
+                    <ul>
+                      <li style={{ margin: '4px 0' }}>
+                        <strong>Windows (CMD):</strong>
+                        <div style={{ background: 'rgba(0,0,0,0.4)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '10px', color: '#fff', margin: '2px 0' }}>
+                          set OLLAMA_ORIGINS=* && ollama serve
+                        </div>
+                      </li>
+                      <li style={{ margin: '4px 0' }}>
+                        <strong>Mac/Linux:</strong>
+                        <div style={{ background: 'rgba(0,0,0,0.4)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '10px', color: '#fff', margin: '2px 0' }}>
+                          OLLAMA_ORIGINS="*" ollama serve
+                        </div>
+                      </li>
+                    </ul>
+                  </li>
+                  <li style={{ marginBottom: '4px' }}>
+                    In another terminal, start a free HTTPS tunnel using <strong>localtunnel</strong>:
+                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '10px', color: '#fff', margin: '4px 0' }}>
+                      npx localtunnel --port 11434
+                    </div>
+                    Or using <strong>ngrok</strong>:
+                    <div style={{ background: 'rgba(0,0,0,0.4)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '10px', color: '#fff', margin: '4px 0' }}>
+                      ngrok http 11434
+                    </div>
+                  </li>
+                  <li>
+                    Copy the secure <code>https://...</code> URL and paste it into the Ollama connection input above!
+                  </li>
+                </ol>
+              </div>
+            </details>
+          </div>
+
           {!ollamaConnected ? (
             <div style={{
               background: 'rgba(239, 68, 68, 0.03)',
