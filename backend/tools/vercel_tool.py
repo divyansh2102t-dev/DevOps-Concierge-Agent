@@ -231,6 +231,24 @@ async def get_deployment_status(deployment_id):
     return {"success": False, "error": resp.text}
 
 
+async def _get_vercel_scope():
+    token = get_key("VERCEL_TOKEN")
+    if not token:
+        return None
+    headers = {"Authorization": f"Bearer {token}"}
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(f"{VERCEL_API}/v2/teams", headers=headers, timeout=5.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                teams = data.get("teams", [])
+                if teams:
+                    return teams[0].get("id")
+        except Exception:
+            pass
+    return None
+
+
 async def deploy_via_cli(project_dir, project_name):
     import os
     import asyncio
@@ -251,9 +269,13 @@ async def deploy_via_cli(project_dir, project_name):
         env = os.environ.copy()
         env["VERCEL_TOKEN"] = token
         
-        # Build command: npx -y vercel --token <token> --name <project_name> --yes --prod
-        # npx -y ensures it auto-installs/runs vercel CLI without asking for confirmation
-        cmd = ["npx", "-y", "vercel", "--token", token, "--name", project_name, "--yes", "--prod"]
+        scope = await _get_vercel_scope()
+        
+        import platform
+        cmd_name = "npx.cmd" if platform.system() == "Windows" else "npx"
+        cmd = [cmd_name, "-y", "vercel", "--token", token, "--name", project_name, "--yes", "--prod"]
+        if scope:
+            cmd.extend(["--scope", scope])
         
         # Run vercel deploy asynchronously
         process = await asyncio.create_subprocess_exec(

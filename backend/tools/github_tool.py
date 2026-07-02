@@ -20,7 +20,7 @@ async def create_repository(repo_name, description="", private=True):
             json={
                 "name": repo_name,
                 "description": description,
-                "private": True,
+                "private": private,
                 "auto_init": False
             },
             headers=headers
