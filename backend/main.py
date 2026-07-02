@@ -92,7 +92,13 @@ app = FastAPI(title="DevOps Concierge Agent", version="1.0.0", lifespan=lifespan
 app.add_middleware(SecurityAndRateLimitMiddleware)
 
 import os
-allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+allowed_origins = [
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000",
+    "tauri://localhost",
+    "http://tauri.localhost",
+    "https://tauri.localhost"
+]
 env_origins = os.getenv("ALLOWED_ORIGINS")
 if env_origins:
     allowed_origins.extend([o.strip() for o in env_origins.split(",") if o.strip()])

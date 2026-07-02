@@ -24,4 +24,7 @@ llama_cpp_temp_*
 *.safetensors
 *.bin
 *.pt
-*.pth
+# PyInstaller & Build Logs
+build/
+*.spec
+*.log
