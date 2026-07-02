@@ -61,6 +61,11 @@ graph TD
 
 ### 3. Automated Database & Cloud Provisioning
 *   **Neon + Vercel Sync:** Automatically creates isolated serverless PostgreSQL databases on Neon and injects the credentials as `DATABASE_URL` directly into your Vercel project's environment variables.
+*   **Intelligent GitHub Fallbacks:** If the target repository name already exists on your GitHub account, the agent gracefully bypasses creation errors and pushes updates directly to the existing repository instead of failing.
+*   **Vercel Deployment Flexibility:** Enforces private repository creation by default, offering two deployment avenues:
+    *   **Git-Backed Deployment (CI/CD):** Links Vercel directly to your GitHub repository. Includes built-in interactive links to authorize the Vercel GitHub App for private repositories if blocked.
+    *   **Direct CLI Upload:** Direct folder deployment via Vercel CLI (`npx vercel`), bypassing GitHub App permissions entirely for seamless, instant, one-off deploys.
+*   **Render Private Repository Connectors:** Detects private repository pull restrictions on Render deployments and automatically provides one-click authorization shortcuts.
 
 ### 4. GPU-Accelerated Local QLoRA Training
 *   **Data Privacy & Autonomy:** Offline pipeline to fine-tune lightweight models (e.g., Qwen 2.5 Coder 1.5B/7B) on your local hardware using `bfloat16` precision to avoid PyTorch Automatic Mixed Precision (AMP) scaling overhead and out-of-memory crashes.
