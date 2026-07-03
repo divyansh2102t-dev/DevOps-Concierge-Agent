@@ -65,7 +65,7 @@ graph TD
 *   **Vercel Deployment Flexibility:** Enforces private repository creation by default, offering two deployment avenues:
     *   **Git-Backed Deployment (CI/CD):** Links Vercel directly to your GitHub repository. Includes built-in interactive links to authorize the Vercel GitHub App for private repositories if blocked.
     *   **Direct CLI Upload:** Direct folder deployment via Vercel CLI (`npx vercel`), bypassing GitHub App permissions entirely for seamless, instant, one-off deploys.
-*   **Render Private Repository Connectors:** Detects private repository pull restrictions on Render deployments and automatically provides one-click authorization shortcuts.
+*   **Render Deployment & Automatic Rebuilds:** Detects project runtime (Node.js vs Python), creates the service on Render, and provides direct links to the Live Application URL and the Render Dashboard. If a service with the same name already exists in your Render account, the agent automatically triggers a new rebuild/redeployment of the existing service instead of failing with a duplicate name error.
 
 ### 4. GPU-Accelerated Local QLoRA Training
 *   **Data Privacy & Autonomy:** Offline pipeline to fine-tune lightweight models (e.g., Qwen 2.5 Coder 1.5B/7B) on your local hardware using `bfloat16` precision to avoid PyTorch Automatic Mixed Precision (AMP) scaling overhead and out-of-memory crashes.
@@ -129,7 +129,7 @@ Open `http://localhost:3000` in your browser, open the **Settings (⚙️)** pan
 
 ## 🖥️ Desktop Application (Tauri Integration)
 
-In addition to running as a local web application, DevOps Concierge Agent can be compiled and run as a standalone Windows desktop application. This native packaging is powered by **Tauri v2** and **PyInstaller**.
+An alternative to running as a local web application, DevOps Concierge Agent can be compiled and run as a standalone Windows desktop application. This native packaging is powered by **Tauri v2** and **PyInstaller**.
 
 ### Architecture Overview
 *   **Frontend WebView**: The Next.js frontend is statically exported (`output: 'export'`) and served natively by Tauri's webview.
@@ -139,50 +139,44 @@ In addition to running as a local web application, DevOps Concierge Agent can be
 ### Installation & Run
 
 You can directly run or install the pre-compiled production binaries:
-- **Standard Windows MSI Installer**: [devops-concierge_0.1.0_x64_en-US.msi](frontend/src-tauri/target/x86_64-pc-windows-gnu/release/bundle/msi/devops-concierge_0.1.0_x64_en-US.msi)
-- **Standalone NSIS Setup (Recommended)**: [devops-concierge_0.1.0_x64-setup.exe](frontend/src-tauri/target/x86_64-pc-windows-gnu/release/bundle/nsis/devops-concierge_0.1.0_x64-setup.exe)
+- **Standard Windows MSI Installer**: [devops-concierge_0.1.0_x64_en-US.msi](frontend/src-tauri/target/release/bundle/msi/devops-concierge_0.1.0_x64_en-US.msi)
+- **Standalone NSIS Setup (Recommended)**: [devops-concierge_0.1.0_x64-setup.exe](frontend/src-tauri/target/release/bundle/nsis/devops-concierge_0.1.0_x64-setup.exe)
 
 Double-click either package to install the desktop application. Once installed, launch **devops-concierge** from your Start Menu or desktop shortcut. The application will automatically boot the background services and cleanly terminate them upon exit.
 
 ### Building the Desktop Application
 
-#### 1. Setup the Rust & GCC Toolchains
-Ensure you have the Rust toolchain with the GNU target installed:
+#### 1. Setup the Rust Toolchains
+Ensure you have the Rust toolchain with the MSVC or GNU target installed (the default Windows build toolchain is recommended):
 ```bash
-rustup target add x86_64-pc-windows-gnu
+rustup target add x86_64-pc-windows-msvc
 ```
 
 #### 2. Compile Standalone Sidecars
-Compile the Python backend services into standalone binaries using PyInstaller:
+Compile the Python backend services into standalone binaries using PyInstaller. Note that Tauri's release bundler expects sidecars to have target-matching suffixes (e.g. MSVC or GNU matching your rustc target):
 ```bash
 # Package the main FastAPI backend
-python -m PyInstaller --onefile --distpath frontend/src-tauri/binaries --name backend-x86_64-pc-windows-gnu --exclude-module torch --exclude-module tensorflow --exclude-module matplotlib --exclude-module scipy --exclude-module transformers --exclude-module h5py --exclude-module torchaudio --exclude-module torchvision --exclude-module datasets --exclude-module cv2 --exclude-module pandas --exclude-module numpy backend/run_main.py
+python -m PyInstaller --onefile --distpath frontend/src-tauri/binaries --name backend-x86_64-pc-windows-msvc --exclude-module torch --exclude-module tensorflow --exclude-module matplotlib --exclude-module scipy --exclude-module transformers --exclude-module h5py --exclude-module torchaudio --exclude-module torchvision --exclude-module datasets --exclude-module cv2 --exclude-module pandas --exclude-module numpy backend/run_main.py
 
 # Package the KeyOptimus scheduler
-python -m PyInstaller --onefile --distpath frontend/src-tauri/binaries --name scheduler-x86_64-pc-windows-gnu --exclude-module torch --exclude-module tensorflow --exclude-module matplotlib --exclude-module scipy --exclude-module transformers --exclude-module h5py --exclude-module torchaudio --exclude-module torchvision --exclude-module datasets --exclude-module cv2 --exclude-module pandas --exclude-module numpy backend/run_scheduler.py
+python -m PyInstaller --onefile --distpath frontend/src-tauri/binaries --name scheduler-x86_64-pc-windows-msvc --exclude-module torch --exclude-module tensorflow --exclude-module matplotlib --exclude-module scipy --exclude-module transformers --exclude-module h5py --exclude-module torchaudio --exclude-module torchvision --exclude-module datasets --exclude-module cv2 --exclude-module pandas --exclude-module numpy backend/run_scheduler.py
 ```
 
 #### 3. Build the Installer / Bundler
-Build the Next.js static assets and compile the Tauri app:
+Build the Next.js static assets and compile the Tauri app. Because static exports are required for Tauri, server-side API routes are kept out of the `src/app` path under `api_backup` during desktop compilation:
 ```powershell
-# Move Next.js API directory temporarily to bypass static export compile checks
-Move-Item -Path "frontend/src/app/api" -Destination "frontend/api_temp"
-
-# Run Next.js build
+# Run Next.js static export build
 $env:TAURI_BUILD="true"
 cd frontend
 npm run build
 cd ..
 
-# Restore the API directory for web/PWA mode support
-Move-Item -Path "frontend/api_temp" -Destination "frontend/src/app/api"
-
 # Build the release MSI and NSIS packages
 cd frontend
-npx @tauri-apps/cli build --target x86_64-pc-windows-gnu
+npx @tauri-apps/cli build
 ```
 The compiled installers will be available under:
-`frontend/src-tauri/target/x86_64-pc-windows-gnu/release/bundle/`
+`frontend/src-tauri/target/release/bundle/`
 
 ---
 
