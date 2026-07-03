@@ -276,8 +276,8 @@ export default function ChatArea() {
             }}>
               Download the standalone desktop app to automatically manage backend microservices, bypass CORS limits, and integrate natively with your local file system.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-              <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
                 <a 
                   href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64-setup.exe"
                   target="_blank"
@@ -306,7 +306,7 @@ export default function ChatArea() {
                   📥 Download for Windows
                 </a>
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center' }}>
                 Are you an IT admin? Download the <a href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64_en-US.msi" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>MSI Installer (.msi)</a> instead.
               </div>
             </div>
