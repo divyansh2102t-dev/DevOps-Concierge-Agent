@@ -9,7 +9,6 @@ import CustomConfirmModal from './components/CustomConfirmModal';
 import AuthorizationModal from './components/AuthorizationModal';
 import AgentStatusBar from './components/AgentStatusBar';
 import OnboardingModal from './components/OnboardingModal';
-import TerminalPanel from './components/TerminalPanel';
 import { API_BASE, deleteSession } from './services/api';
 
 export default function Home() {
@@ -217,48 +216,6 @@ export default function Home() {
               📜 History
             </button>
 
-            {/* SEE TERMINAL BUTTON */}
-            <button
-              onClick={() => dispatch({ type: 'TOGGLE_TERMINAL' })}
-              style={{
-                background: (state.terminals || []).some(t => t.status === 'running')
-                  ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)'
-                  : 'rgba(255, 255, 255, 0.04)',
-                border: (state.terminals || []).some(t => t.status === 'running')
-                  ? '1px solid var(--accent-cyan)'
-                  : '1px solid var(--border-glass)',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                color: (state.terminals || []).some(t => t.status === 'running') ? '#fff' : 'var(--text-secondary)',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.color = '#fff';
-                e.currentTarget.style.borderColor = 'var(--accent-cyan)';
-              }}
-              onMouseLeave={e => {
-                const isRunning = (state.terminals || []).some(t => t.status === 'running');
-                e.currentTarget.style.background = isRunning
-                  ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)'
-                  : 'rgba(255, 255, 255, 0.04)';
-                e.currentTarget.style.color = isRunning ? '#fff' : 'var(--text-secondary)';
-                e.currentTarget.style.borderColor = isRunning ? 'var(--accent-cyan)' : 'var(--border-glass)';
-              }}
-            >
-              💻 Terminal {(state.terminals || []).filter(t => t.status === 'running').length > 0 && (
-                <span className="header-terminal-badge">
-                  {(state.terminals || []).filter(t => t.status === 'running').length}
-                </span>
-              )}
-            </button>
-
             {/* CLEAR CONVERSATION BUTTON */}
             <button
               onClick={() => setConfirmClearOpen(true)}
@@ -311,13 +268,24 @@ export default function Home() {
         <AgentStatusBar />
         <ChatArea />
         <InputBar />
+        <footer style={{ 
+          textAlign: 'center', 
+          padding: '12px 0 8px 0', 
+          fontSize: '11px', 
+          color: 'var(--text-muted)', 
+          fontFamily: '"Outfit", "Inter", sans-serif',
+          marginTop: '8px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.03)',
+          opacity: 0.8
+        }}>
+          © {new Date().getFullYear()} Divyansh Tiwari. All rights reserved. *T&C Apply.
+        </footer>
       </main>
 
       <SettingsPanel />
       <HistoryPanel />
       <AuthorizationModal />
       <OnboardingModal />
-      <TerminalPanel />
 
       {/* CUSTOM CONFIRM CLEAR CHAT MODAL */}
       <CustomConfirmModal

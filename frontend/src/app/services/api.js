@@ -181,10 +181,14 @@ export async function devopsDeployVercelCli(projectDir, projectName = null) {
   });
 }
 
-export async function devopsDeployRender(githubUrl, projectName = null) {
+export async function devopsDeployRender(githubUrl, projectName = null, projectDir = null) {
   return request('/api/settings/devops/deploy/render', {
     method: 'POST',
-    body: JSON.stringify({ github_url: githubUrl, project_name: projectName }),
+    body: JSON.stringify({ 
+      github_url: githubUrl, 
+      project_name: projectName,
+      project_dir: projectDir 
+    }),
   });
 }
 

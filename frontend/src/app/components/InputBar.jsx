@@ -66,6 +66,7 @@ export default function InputBar() {
   const [showVercelOptionsModal, setShowVercelOptionsModal] = useState(false);
   const [showRenderOptionsModal, setShowRenderOptionsModal] = useState(false);
   const [automationState, setAutomationState] = useState({ loading: false, error: '', success: '', type: '' });
+  const [toolkitCollapsed, setToolkitCollapsed] = useState(false);
 
   const [isMobileDevice, setIsMobileDevice] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -80,6 +81,10 @@ export default function InputBar() {
     if (typeof window !== 'undefined') {
       setProjectPath(localStorage.getItem('devops_current_project_path') || '');
       setGithubUrl(localStorage.getItem('devops_current_github_url') || '');
+      const collapsed = localStorage.getItem('devops_toolkit_collapsed');
+      if (collapsed !== null) {
+        setToolkitCollapsed(JSON.parse(collapsed));
+      }
     }
 
     const loadKeys = async () => {
@@ -240,7 +245,9 @@ export default function InputBar() {
     }
     setAutomationState({ loading: true, error: '', success: '', type: 'render' });
     try {
-      const res = await devopsDeployRender(githubUrl);
+      const folderName = projectPath ? projectPath.split(/[\\/]/).pop() : 'render-service';
+      const serviceName = folderName ? `${folderName}-service` : null;
+      const res = await devopsDeployRender(githubUrl, serviceName, projectPath);
       if (res && res.success) {
         setAutomationState({ 
           loading: false, 
@@ -1147,13 +1154,26 @@ export default function InputBar() {
               : "";
 
         return (
-          <div className="devops-toolkit-panel">
-            <div className="devops-toolkit-header">
-              <div className="toolkit-header-left">
+          <div className={`devops-toolkit-panel ${toolkitCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="devops-toolkit-header" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                const nextState = !toolkitCollapsed;
+                setToolkitCollapsed(nextState);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('devops_toolkit_collapsed', JSON.stringify(nextState));
+                }
+              }}
+            >
+              <div className="toolkit-header-left" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span className="toolkit-icon">🚀</span>
                 <span className="toolkit-title">DevOps Automation Toolkit</span>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginLeft: '4px', transform: toolkitCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform 0.2s' }}>
+                  ▼
+                </span>
               </div>
-              <div className="toolkit-status-indicator">
+              <div className="toolkit-status-indicator" onClick={(e) => e.stopPropagation()}>
                 {automationState.loading && (
                   <span className="toolkit-loading-text">
                     <span className="spinner-icon">⏳</span> Executing {automationState.type === 'folder' ? 'folder picker' : automationState.type === 'push' ? 'push to GitHub' : 'hosting deployment'}...
@@ -1172,67 +1192,69 @@ export default function InputBar() {
               </div>
             </div>
 
-            <div className="devops-toolkit-body">
-              <div className="devops-action-buttons">
-                <div className="tooltip-container">
-                  <button
-                    className="devops-action-btn github-btn"
-                    disabled={!isGithubActive || automationState.loading}
-                    onClick={handlePushToGithub}
-                  >
-                    🐙 Push to GitHub
-                  </button>
-                  {githubTooltip && (
-                    <span className="tooltip-text">{githubTooltip}</span>
-                  )}
+            {!toolkitCollapsed && (
+              <div className="devops-toolkit-body">
+                <div className="devops-action-buttons">
+                  <div className="tooltip-container">
+                    <button
+                      className="devops-action-btn github-btn"
+                      disabled={!isGithubActive || automationState.loading}
+                      onClick={handlePushToGithub}
+                    >
+                      🐙 Push to GitHub
+                    </button>
+                    {githubTooltip && (
+                      <span className="tooltip-text">{githubTooltip}</span>
+                    )}
+                  </div>
+
+                  <div className="tooltip-container">
+                    <button
+                      className="devops-action-btn vercel-btn"
+                      disabled={!isVercelActive || automationState.loading}
+                      onClick={handleDeployToVercel}
+                    >
+                      ▲ Host with Vercel
+                    </button>
+                    {vercelTooltip && (
+                      <span className="tooltip-text">{vercelTooltip}</span>
+                    )}
+                  </div>
+
+                  <div className="tooltip-container">
+                    <button
+                      className="devops-action-btn render-btn"
+                      disabled={!isRenderActive || automationState.loading}
+                      onClick={handleDeployToRender}
+                    >
+                      ☁️ Host on Render
+                    </button>
+                    {renderTooltip && (
+                      <span className="tooltip-text">{renderTooltip}</span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="tooltip-container">
-                  <button
-                    className="devops-action-btn vercel-btn"
-                    disabled={!isVercelActive || automationState.loading}
-                    onClick={handleDeployToVercel}
-                  >
-                    ▲ Host with Vercel
-                  </button>
-                  {vercelTooltip && (
-                    <span className="tooltip-text">{vercelTooltip}</span>
-                  )}
-                </div>
+                <div className="devops-toolkit-configs">
+                  <div className="config-item" onClick={handleSelectFolder}>
+                    <span className="config-label">📁 Folder:</span>
+                    <span className="config-value" title={projectPath || "Click to select local folder"}>
+                      {projectPath ? projectPath.split(/[\\/]/).pop() : "Select Folder..."}
+                    </span>
+                  </div>
 
-                <div className="tooltip-container">
-                  <button
-                    className="devops-action-btn render-btn"
-                    disabled={!isRenderActive || automationState.loading}
-                    onClick={handleDeployToRender}
-                  >
-                    ☁️ Host on Render
-                  </button>
-                  {renderTooltip && (
-                    <span className="tooltip-text">{renderTooltip}</span>
-                  )}
+                  <div className="config-item" onClick={() => {
+                    setInputGithubUrl(githubUrl);
+                    setShowLinkModal(true);
+                  }}>
+                    <span className="config-label">🔗 Repo URL:</span>
+                    <span className="config-value" title={githubUrl || "Click to link GitHub repository"}>
+                      {githubUrl ? githubUrl.split('/').slice(-2).join('/') : "Link Repo..."}
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <div className="devops-toolkit-configs">
-                <div className="config-item" onClick={handleSelectFolder}>
-                  <span className="config-label">📁 Folder:</span>
-                  <span className="config-value" title={projectPath || "Click to select local folder"}>
-                    {projectPath ? projectPath.split(/[\\/]/).pop() : "Select Folder..."}
-                  </span>
-                </div>
-
-                <div className="config-item" onClick={() => {
-                  setInputGithubUrl(githubUrl);
-                  setShowLinkModal(true);
-                }}>
-                  <span className="config-label">🔗 Repo URL:</span>
-                  <span className="config-value" title={githubUrl || "Click to link GitHub repository"}>
-                    {githubUrl ? githubUrl.split('/').slice(-2).join('/') : "Link Repo..."}
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         );
       })()}

@@ -276,63 +276,39 @@ export default function ChatArea() {
             }}>
               Download the standalone desktop app to automatically manage backend microservices, bypass CORS limits, and integrate natively with your local file system.
             </p>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-              <a 
-                href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64-setup.exe"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  textDecoration: 'none',
-                  background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
-                  color: '#fff',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(6, 182, 212, 0.6)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(6, 182, 212, 0.4)';
-                }}
-              >
-                📥 Download Standalone (.exe)
-              </a>
-              <a 
-                href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64_en-US.msi"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  textDecoration: 'none',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid var(--border-glass)',
-                  color: 'var(--text-secondary)',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.color = '#fff';
-                  e.currentTarget.style.borderColor = 'var(--accent-cyan)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                  e.currentTarget.style.color = 'var(--text-secondary)';
-                  e.currentTarget.style.borderColor = 'var(--border-glass)';
-                }}
-              >
-                📦 MSI Installer (.msi)
-              </a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <a 
+                  href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64-setup.exe"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 14px rgba(6, 182, 212, 0.4)',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(6, 182, 212, 0.6)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(6, 182, 212, 0.4)';
+                  }}
+                >
+                  📥 Download for Windows
+                </a>
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                Are you an IT admin? Download the <a href="https://github.com/divyansh2102t-dev/DevOps-Concierge-Agent/releases/download/v0.1.0/devops-concierge_0.1.0_x64_en-US.msi" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>MSI Installer (.msi)</a> instead.
+              </div>
             </div>
           </div>
         )}

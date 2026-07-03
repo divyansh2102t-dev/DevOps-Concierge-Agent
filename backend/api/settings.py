@@ -254,6 +254,7 @@ class DevOpsPushRequest(BaseModel):
 class DevOpsDeployRequest(BaseModel):
     github_url: str
     project_name: Optional[str] = None
+    project_dir: Optional[str] = None
 
 
 @router.post("/select-folder", response_model=SelectFolderResponse)
@@ -385,7 +386,7 @@ async def devops_deploy_render(req: DevOpsDeployRequest):
     service_name = req.project_name or f"{repo_name}-service"
     
     # 1. Create Render Service
-    render_res = await create_render_service(service_name, github_url)
+    render_res = await create_render_service(service_name, github_url, project_dir=req.project_dir)
     if not render_res.get("success"):
         return {"success": False, "error": f"Failed to create Render service: {render_res.get('error')}"}
         

@@ -246,7 +246,7 @@ export default function SettingsPanel() {
     HUGGINGFACE_API_KEY: 'https://huggingface.co/settings/tokens',
     GITHUB_TOKEN: 'https://github.com/settings/tokens',
     VERCEL_TOKEN: 'https://vercel.com/account/tokens',
-    RENDER_TOKEN: 'https://dashboard.render.com/user/settings#api-keys',
+    RENDER_TOKEN: 'https://dashboard.render.com/u/settings#api-keys',
     NEON_API_KEY: 'https://console.neon.tech/app/settings/profile',
   };
 
