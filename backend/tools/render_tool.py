@@ -118,11 +118,18 @@ async def create_render_service(service_name, github_repo, env_vars=None, projec
                             timeout=15.0
                         )
                         if deploy_resp.status_code in (200, 201, 202):
+                            # Try to extract the URL safely
+                            live_url = existing_service.get("url")
+                            if not live_url:
+                                live_url = existing_service.get("serviceDetails", {}).get("url", "")
+                            if not live_url:
+                                live_url = f"https://{service_name}.onrender.com"
+                                
                             return {
                                 "success": True,
                                 "service_id": service_id,
-                                "name": existing_service["name"],
-                                "url": existing_service["url"],
+                                "name": existing_service.get("name", service_name),
+                                "url": live_url,
                                 "status": "redeploying",
                                 "deploy_url": f"https://dashboard.render.com/web/{service_id}"
                             }
