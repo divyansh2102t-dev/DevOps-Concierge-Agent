@@ -252,7 +252,13 @@ export default function InputBar() {
         setAutomationState({ 
           loading: false, 
           error: '', 
-          success: `Successfully deployed to Render! Service Dashboard: ${res.deploy_url}`, 
+          success: (
+            <span>
+              Successfully triggered Render deployment!<br />
+              🌐 <strong>Live App:</strong> <a href={res.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>{res.url}</a><br />
+              📊 <strong>Dashboard:</strong> <a href={res.deploy_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-cyan)', textDecoration: 'underline' }}>View on Render</a>
+            </span>
+          ), 
           type: 'render' 
         });
       } else {
